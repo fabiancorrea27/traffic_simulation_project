@@ -1,1 +1,18 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# VS Code / PyCharm
+.vscode/
+.idea/
+
+# Test cache
+.pytest_cache/
+
+# Other
+.DS_Store
