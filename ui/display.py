@@ -13,7 +13,7 @@ def draw_scene(screen, intersection):
     # Dibujar semáforos
     for light in intersection.traffic_lights.values():
         color = light.state
-        pygame.draw.circle(screen, color, light.position, 10)
+        pygame.draw.circle(screen, color, light.position, LIGHT_RADIUS)
 
     # Dibujar vehículos
     intersection.draw(screen)
