@@ -12,15 +12,15 @@ def main():
     running = True
 
     intersection = Intersection()
-    intersection.add_vehicles(5, "N")
-    intersection.add_vehicles(5, "S")
-    intersection.add_vehicles(5, "E")
-    intersection.add_vehicles(5, "W")
+    # intersection.add_vehicles(5, "N")
+    # intersection.add_vehicles(5, "S")
+    # intersection.add_vehicles(5, "E")
+    # intersection.add_vehicles(5, "W")
     
-    # intersection.add_vehicles(2, "N")
-    # intersection.add_vehicles(2, "S")
-    # intersection.add_vehicles(2, "E")
-    # intersection.add_vehicles(2, "W")
+    intersection.add_vehicle(Vehicle("W", "S"))
+    # intersection.add_vehicles(1, "S")
+    # intersection.add_vehicles(1, "E")
+    # intersection.add_vehicles(1, "W")
 
     toggle_timer = 0
 

@@ -25,13 +25,16 @@ class Intersection:
             "W": [],
         }
 
-    def add_vehicle(self, vehicle):
-        self.vehicles[vehicle.direction].append(vehicle)
+    def add_vehicle(self, direction):
+        self.vehicles[direction].append(Vehicle(direction))
 
+    def add_vehicle(self, vehicle):
+        self.vehicles[vehicle.initial_direction].append(vehicle)
+        
     def add_vehicles(self, amount, direction):
         offset = 0  # Controla la acumulación de la posición
         for _ in range(amount):
-            vehicle = Vehicle(direction)
+            vehicle = self.__create_vehicle_with_random_final_direction(direction)
 
             # Espacio aleatorio adicional (por ejemplo entre 0 y 30 px)
             random_spacing = random.randint(0, 30)
@@ -50,7 +53,12 @@ class Intersection:
                 vehicle.x += offset
                 offset += total_spacing
 
-            self.vehicles[direction].append(vehicle)
+        self.vehicles[direction].append(vehicle)
+
+    def __create_vehicle_with_random_final_direction(self, direction):
+        final_direction = random.choice(["N", "S", "E", "W"])
+        vehicle = Vehicle(direction, final_direction)
+        return vehicle
 
     def update(self):
         vehicle_list = [v for sublist in self.vehicles.values() for v in sublist]
@@ -63,13 +71,15 @@ class Intersection:
 
         for v in vehicle_list:
             v.speed = 0 if v.stopped else VEHICLE_SPEED
-            v.update(self.traffic_lights[v.direction])
+            v.update()
             v.stopped = False
 
     # If a light is yellow, stop the vehicle
     def __control_light_car_stop_action(self, vehicle):
-        light = self.traffic_lights[vehicle.direction]
-        if light.state in (YELLOW, RED) and self.__verify_vehicle_nearby_light(vehicle, light):
+        light = self.traffic_lights[vehicle.initial_direction]
+        if light.state in (YELLOW, RED) and self.__verify_vehicle_nearby_light(
+            vehicle, light
+        ):
             vehicle.stopped = True
 
     # Verify is vehicle is near to a light
@@ -101,36 +111,36 @@ class Intersection:
                 vehicle2.stopped = True
 
     def __is_behind(self, rear, front):
-        if rear.direction != front.direction:
+        if rear.initial_direction != front.initial_direction:
             return False  # No van en la misma dirección
 
-        if rear.direction == "N":
+        if rear.initial_direction == "N":
             return rear.y > front.y
-        elif rear.direction == "S":
+        elif rear.initial_direction == "S":
             return rear.y < front.y
-        elif rear.direction == "E":
+        elif rear.initial_direction == "E":
             return rear.x < front.x
-        elif rear.direction == "W":
+        elif rear.initial_direction == "W":
             return rear.x > front.x
 
         return False
 
     # Verify if vehicle1 will collide with vehicle2
     def __vehicle_will_collide(self, vehicle1, vehicle2):
-        if vehicle1.direction != vehicle2.direction:
+        if vehicle1.initial_direction != vehicle2.initial_direction:
             return False
 
         same_lane = False
         distance = 0
 
-        if vehicle1.direction in ("N", "S"):
+        if vehicle1.initial_direction in ("N", "S"):
             same_lane = abs(vehicle1.x - vehicle2.x) < vehicle1.size
             if vehicle1.y > vehicle2.y:
                 distance = vehicle1.y - (vehicle2.y + vehicle2.size)
             else:
                 distance = vehicle2.y - (vehicle1.y + vehicle1.size)
 
-        elif vehicle1.direction in ("E", "W"):
+        elif vehicle1.initial_direction in ("E", "W"):
             same_lane = abs(vehicle1.y - vehicle2.y) < vehicle1.size
             if vehicle1.x < vehicle2.x:
                 distance = vehicle2.x - (vehicle1.x + vehicle1.size)
@@ -166,10 +176,10 @@ class Intersection:
     def draw(self, screen):
         for v in (v for vehicle_list in self.vehicles.values() for v in vehicle_list):
             if (
-                (v.direction == "N" and v.y < -VEHICLE_SIZE)
-                or (v.direction == "S" and v.y > WINDOW_HEIGHT)
-                or (v.direction == "E" and v.x > WINDOW_WIDTH)
-                or (v.direction == "W" and v.x < -VEHICLE_SIZE)
+                (v.final_direction == "N" and v.y < -VEHICLE_SIZE)
+                or (v.final_direction == "S" and v.y > WINDOW_HEIGHT)
+                or (v.final_direction == "E" and v.x > WINDOW_WIDTH)
+                or (v.final_direction == "W" and v.x < -VEHICLE_SIZE)
             ):
-                self.vehicles[v.direction].remove(v)
+                self.vehicles[v.initial_direction].remove(v)
             v.draw(screen)
