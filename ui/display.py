@@ -9,6 +9,8 @@ def draw_scene(screen, intersection):
     center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
     pygame.draw.rect(screen, GRAY, (center[0] - ROAD_WIDTH//2, 0, ROAD_WIDTH, WINDOW_HEIGHT))  # Vertical
     pygame.draw.rect(screen, GRAY, (0, center[1] - ROAD_WIDTH//2, WINDOW_WIDTH, ROAD_WIDTH))  # Horizontal
+    # pygame.draw.rect(screen, BLUE, (center[0] - ROAD_WIDTH//2, 0, ROAD_WIDTH // 2, WINDOW_HEIGHT))  # Vertical
+    # pygame.draw.rect(screen, BLUE, (0, center[1] - ROAD_WIDTH//2, WINDOW_WIDTH, ROAD_WIDTH // 2))  # Horizontal
 
     # Dibujar semáforos
     for light in intersection.traffic_lights.values():

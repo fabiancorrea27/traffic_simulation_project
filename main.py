@@ -1,21 +1,26 @@
 import pygame
-from config import GREEN, WINDOW_WIDTH, WINDOW_HEIGHT, RED, YELLOW
+from config import GREEN, WINDOW_WIDTH, WINDOW_HEIGHT
 from ui.display import draw_scene
 from simulation import Intersection, Vehicle
 
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE)
     pygame.display.set_caption("Simulación de Intersección")
     clock = pygame.time.Clock()
     running = True
 
     intersection = Intersection()
-    intersection.add_vehicle(Vehicle("N"))
-    intersection.add_vehicle(Vehicle("S"))
-    intersection.add_vehicle(Vehicle("E"))
-    intersection.add_vehicle(Vehicle("W"))
+    intersection.add_vehicles(5, "N")
+    intersection.add_vehicles(5, "S")
+    intersection.add_vehicles(5, "E")
+    intersection.add_vehicles(5, "W")
+    
+    # intersection.add_vehicles(2, "N")
+    # intersection.add_vehicles(2, "S")
+    # intersection.add_vehicles(2, "E")
+    # intersection.add_vehicles(2, "W")
 
     toggle_timer = 0
 
