@@ -30,12 +30,13 @@ class Intersection:
 
     def add_vehicle(self, vehicle):
         self.vehicles[vehicle.initial_direction].append(vehicle)
-        
+
     def add_vehicles(self, amount, direction):
         offset = 0  # Controla la acumulación de la posición
         for _ in range(amount):
-            vehicle = self.__create_vehicle_with_random_final_direction(direction)
-
+            vehicle = Vehicle(direction, direction)
+            self.__change_vehicle_random_final_direction(vehicle)
+            vehicle.calculate_turning_limit()
             # Espacio aleatorio adicional (por ejemplo entre 0 y 30 px)
             random_spacing = random.randint(0, 30)
             total_spacing = VEHICLE_SIZE + VEHICLE_SPACING + random_spacing
@@ -53,12 +54,17 @@ class Intersection:
                 vehicle.x += offset
                 offset += total_spacing
 
-        self.vehicles[direction].append(vehicle)
-
-    def __create_vehicle_with_random_final_direction(self, direction):
-        final_direction = random.choice(["N", "S", "E", "W"])
-        vehicle = Vehicle(direction, final_direction)
-        return vehicle
+            self.vehicles[direction].append(vehicle)
+            
+    def __change_vehicle_random_final_direction(self, vehicle):
+        if vehicle.initial_direction == "N":
+            vehicle.final_direction = random.choice(["N", "E", "W"])
+        elif vehicle.initial_direction == "S":
+            vehicle.final_direction = random.choice(["S", "E", "W"])
+        elif vehicle.initial_direction == "E":
+            vehicle.final_direction = random.choice(["E", "N", "S"])
+        elif vehicle.initial_direction == "W":
+            vehicle.final_direction = random.choice(["W", "N", "S"])
 
     def update(self):
         vehicle_list = [v for sublist in self.vehicles.values() for v in sublist]
@@ -70,17 +76,18 @@ class Intersection:
             self.__control_vehicles_crash(v1, v2)
 
         for v in vehicle_list:
-            v.speed = 0 if v.stopped else VEHICLE_SPEED
+            v.speed = 0 if v.has_stopped else VEHICLE_SPEED
+            self.__control_vehicle_out_of_bounds(v)
             v.update()
-            v.stopped = False
+            v.has_stopped = False
 
-    # If a light is yellow, stop the vehicle
+    # If a light is yellow or red, stop the vehicle
     def __control_light_car_stop_action(self, vehicle):
         light = self.traffic_lights[vehicle.initial_direction]
         if light.state in (YELLOW, RED) and self.__verify_vehicle_nearby_light(
             vehicle, light
         ):
-            vehicle.stopped = True
+            vehicle.has_stopped = True
 
     # Verify is vehicle is near to a light
     def __verify_vehicle_nearby_light(self, vehicle, light):
@@ -106,9 +113,9 @@ class Intersection:
         if self.__vehicle_will_collide(vehicle1, vehicle2):
             # Determinar quién está detrás (según dirección)
             if self.__is_behind(vehicle1, vehicle2):
-                vehicle1.stopped = True
+                vehicle1.has_stopped = True
             else:
-                vehicle2.stopped = True
+                vehicle2.has_stopped = True
 
     def __is_behind(self, rear, front):
         if rear.initial_direction != front.initial_direction:
@@ -149,6 +156,22 @@ class Intersection:
 
         return same_lane and abs(distance) <= VEHICLE_SPACING
 
+    def __control_vehicle_out_of_bounds(self, vehicle):
+        if vehicle.has_moved and (
+            (vehicle.final_direction == "N" and vehicle.y < -VEHICLE_SIZE)
+            or (vehicle.final_direction == "S" and vehicle.y > WINDOW_HEIGHT)
+            or (vehicle.final_direction == "E" and vehicle.x > WINDOW_WIDTH)
+            or (vehicle.final_direction == "W" and vehicle.x < -VEHICLE_SIZE)
+        ):
+            self.__rearrange_vehicle(vehicle)
+
+    def __rearrange_vehicle(self, vehicle):
+        self.__change_vehicle_random_final_direction(vehicle)
+        vehicle.calculate_turning_limit()
+        vehicle.calculate_initial_position()
+        vehicle.has_moved = False
+        vehicle.has_turned = False
+
     def change_lights(self):
         light = self.traffic_lights["N"]
 
@@ -174,12 +197,7 @@ class Intersection:
             light.last_state = light.state
 
     def draw(self, screen):
-        for v in (v for vehicle_list in self.vehicles.values() for v in vehicle_list):
-            if (
-                (v.final_direction == "N" and v.y < -VEHICLE_SIZE)
-                or (v.final_direction == "S" and v.y > WINDOW_HEIGHT)
-                or (v.final_direction == "E" and v.x > WINDOW_WIDTH)
-                or (v.final_direction == "W" and v.x < -VEHICLE_SIZE)
-            ):
-                self.vehicles[v.initial_direction].remove(v)
+        for v in (
+            v for vehicle_list in self.vehicles.copy().values() for v in vehicle_list
+        ):
             v.draw(screen)
