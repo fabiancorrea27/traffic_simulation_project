@@ -12,16 +12,13 @@ def main():
     running = True
 
     intersection = Intersection()
-    intersection.add_vehicles(5, "N")
-    intersection.add_vehicles(5, "S")
-    intersection.add_vehicles(5, "E")
-    intersection.add_vehicles(5, "W")
+    intersection.add_vehicles(2, "S")
+    intersection.add_vehicles(2, "N")
+    intersection.add_vehicles(2, "E")
+    intersection.add_vehicles(2, "W")
     
-    # intersection.add_vehicles(2, "N")
-    # intersection.add_vehicles(2, "S")
-    # intersection.add_vehicles(2, "E")
-    # intersection.add_vehicles(2, "W")
 
+    
     toggle_timer = 0
 
     while running:
@@ -38,7 +35,7 @@ def main():
 
         draw_scene(screen, intersection)
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(120)
 
     pygame.quit()
 
