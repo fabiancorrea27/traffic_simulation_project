@@ -23,8 +23,8 @@ class Vehicle:
         self.turn_angle = 0
         self.speed = VEHICLE_SPEED
         self.size = VEHICLE_SIZE
-        self.has_stopped = False
-        self.turning = False
+        self.is_stopped = False
+        self.is_turning = False
         self.has_turned = False
         self.has_moved = False
         self.turning_limit = (None, None)
@@ -107,19 +107,19 @@ class Vehicle:
             if (
                 abs(self.x - x_limit) < VEHICLE_SPACING
                 and abs(self.y - y_limit) < VEHICLE_SPACING
-                and not self.turning
+                and not self.is_turning
             ):
-                self.turning = True
+                self.is_turning = True
                 self.turn_angle = self.__turn_angle_limits()[0]
         self.__move()
         self.__verify_movement()
 
     def __move(self):
-        if self.turning:
-            self.turn_angle += TURNING_SPEED  # velocidad del giro
+        if self.is_turning:
+            self.turn_angle += TURNING_SPEED if self.speed > 0 else 0 # velocidad del giro
             if self.turn_angle > self.__turn_angle_limits()[1]:
                 self.turn_angle = self.__turn_angle_limits()[1]
-                self.turning = False
+                self.is_turning = False
                 self.x = round(self.x)
                 self.y = round(self.y)
                 self.__adjust_position_after_turn()
@@ -204,5 +204,4 @@ class Vehicle:
             self.has_moved = True
 
     def draw(self, screen):
-        pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y, self.size, self.size))
-        pygame.draw.circle(screen, YELLOW, (self.x, self.y), 2)
+        pygame.draw.rect(screen, (0, 255, 255), (self.x, self.y, self.size, self.size), 0, 1)

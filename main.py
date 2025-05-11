@@ -10,12 +10,16 @@ def main():
     pygame.display.set_caption("Simulación de Intersección")
     clock = pygame.time.Clock()
     running = True
+    is_vehicles_collided = False
 
     intersection = Intersection()
-    intersection.add_vehicles(2, "S")
-    intersection.add_vehicles(2, "N")
-    intersection.add_vehicles(2, "E")
-    intersection.add_vehicles(2, "W")
+    intersection.add_vehicles(5, "S")
+    intersection.add_vehicles(5, "N")
+    intersection.add_vehicles(5, "E")
+    intersection.add_vehicles(5, "W")
+    # intersection.add_vehicle(Vehicle("N", "W"))
+    # intersection.add_vehicle(Vehicle("N", "W"))
+    # intersection.add_vehicle(Vehicle("N", "W"))
     
 
     
@@ -31,11 +35,16 @@ def main():
         if toggle_timer >= 120:
             intersection.change_lights()
             toggle_timer = 0
-        intersection.update()
+        if not is_vehicles_collided:
+            try:
+                intersection.update()
+            except Exception as e:
+                is_vehicles_collided = True
+                print(e)
 
         draw_scene(screen, intersection)
         pygame.display.flip()
-        clock.tick(120)
+        clock.tick(60)
 
     pygame.quit()
 

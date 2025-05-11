@@ -1,10 +1,11 @@
 import itertools
+import math
 import random
-import time
 from config import *
 
 from .vehicle import Vehicle
 from .traffic_light import TrafficLight
+from .exceptions import CollisionErrorException
 
 
 class Intersection:
@@ -30,6 +31,7 @@ class Intersection:
 
     def add_vehicle(self, vehicle):
         self.vehicles[vehicle.initial_direction].append(vehicle)
+        vehicle.calculate_turning_limit()
 
     def add_vehicles(self, amount, direction):
         offset = 0  # Controla la acumulación de la posición
@@ -55,7 +57,7 @@ class Intersection:
                 offset += total_spacing
 
             self.vehicles[direction].append(vehicle)
-            
+
     def __change_vehicle_random_final_direction(self, vehicle):
         if vehicle.initial_direction == "N":
             vehicle.final_direction = random.choice(["N", "E", "W"])
@@ -76,10 +78,10 @@ class Intersection:
             self.__control_vehicles_crash(v1, v2)
 
         for v in vehicle_list:
-            v.speed = 0 if v.has_stopped else VEHICLE_SPEED
+            v.speed = 0 if v.is_stopped else VEHICLE_SPEED
             self.__control_vehicle_out_of_bounds(v)
             v.update()
-            v.has_stopped = False
+            v.is_stopped = False
 
     # If a light is yellow or red, stop the vehicle
     def __control_light_car_stop_action(self, vehicle):
@@ -87,7 +89,7 @@ class Intersection:
         if light.state in (YELLOW, RED) and self.__verify_vehicle_nearby_light(
             vehicle, light
         ):
-            vehicle.has_stopped = True
+            vehicle.is_stopped = True
 
     # Verify is vehicle is near to a light
     def __verify_vehicle_nearby_light(self, vehicle, light):
@@ -110,30 +112,25 @@ class Intersection:
 
     # Controll vehicles crash
     def __control_vehicles_crash(self, vehicle1, vehicle2):
-        if self.__vehicle_will_collide(vehicle1, vehicle2):
-            # Determinar quién está detrás (según dirección)
-            if self.__is_behind(vehicle1, vehicle2):
-                vehicle1.has_stopped = True
-            else:
-                vehicle2.has_stopped = True
+        if (vehicle1.is_turning or vehicle2.is_turning) and (
+            vehicle1.initial_direction != vehicle2.initial_direction
+        ):
+            if self.__vehicle_will_collide_while_turning(vehicle1, vehicle2):
+                raise CollisionErrorException()
+        else:
+            if self.__vehicle_will_collide_same_direction(vehicle1, vehicle2):
+                if self.__is_behind(vehicle1, vehicle2):
+                    vehicle1.is_stopped = True
+                else:
+                    vehicle2.is_stopped = True
 
-    def __is_behind(self, rear, front):
-        if rear.initial_direction != front.initial_direction:
-            return False  # No van en la misma dirección
+    def __vehicle_will_collide_while_turning(self, vehicle1, vehicle2):
+        dx = vehicle1.x - vehicle2.x
+        dy = vehicle1.y - vehicle2.y
+        distance = math.hypot(dx, dy)
+        return distance < VEHICLE_SIZE
 
-        if rear.initial_direction == "N":
-            return rear.y > front.y
-        elif rear.initial_direction == "S":
-            return rear.y < front.y
-        elif rear.initial_direction == "E":
-            return rear.x < front.x
-        elif rear.initial_direction == "W":
-            return rear.x > front.x
-
-        return False
-
-    # Verify if vehicle1 will collide with vehicle2
-    def __vehicle_will_collide(self, vehicle1, vehicle2):
+    def __vehicle_will_collide_same_direction(self, vehicle1, vehicle2):
         if vehicle1.initial_direction != vehicle2.initial_direction:
             return False
 
@@ -155,6 +152,36 @@ class Intersection:
                 distance = vehicle1.x - (vehicle2.x + vehicle2.size)
 
         return same_lane and abs(distance) <= VEHICLE_SPACING
+
+    def __is_behind(self, rear, front):
+        if rear.has_turned or front.has_turned:
+            return self.__is_behind_with_different_direction(rear, front)
+        else:
+            return self.__is_behind_with_same_direction(rear, front)
+
+    def __is_behind_with_different_direction(self, rear, front):
+        if rear.final_direction == "N":
+            return rear.y > front.y
+        elif rear.final_direction == "S":
+            return rear.y < front.y
+        elif rear.final_direction == "E":
+            return rear.x < front.x
+        elif rear.final_direction == "W":
+            return rear.x > front.x
+
+        return False
+
+    def __is_behind_with_same_direction(self, rear, front):
+        if rear.initial_direction == "N":
+            return rear.y > front.y
+        elif rear.initial_direction == "S":
+            return rear.y < front.y
+        elif rear.initial_direction == "E":
+            return rear.x < front.x
+        elif rear.initial_direction == "W":
+            return rear.x > front.x
+
+        return False
 
     def __control_vehicle_out_of_bounds(self, vehicle):
         if vehicle.has_moved and (
