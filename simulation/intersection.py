@@ -41,7 +41,7 @@ class Intersection:
             vehicle.calculate_turning_limit()
             # Espacio aleatorio adicional (por ejemplo entre 0 y 30 px)
             random_spacing = random.randint(0, 30)
-            total_spacing = VEHICLE_SIZE + VEHICLE_SPACING + random_spacing
+            total_spacing = config["VEHICLE_SIZE"] + config["VEHICLE_SPACING"] + random_spacing
 
             if direction == "N":
                 vehicle.y += offset
@@ -78,7 +78,7 @@ class Intersection:
             self.__control_vehicles_crash(v1, v2)
 
         for v in vehicle_list:
-            v.speed = 0 if v.is_stopped else VEHICLE_SPEED
+            v.speed = 0 if v.is_stopped else config["VEHICLE_SPEED"]
             self.__control_vehicle_out_of_bounds(v)
             v.update()
             v.is_stopped = False
@@ -94,19 +94,19 @@ class Intersection:
     # Verify is vehicle is near to a light
     def __verify_vehicle_nearby_light(self, vehicle, light):
         if light.direction == "N":
-            return (abs(vehicle.y - light.position[1]) < LIGHT_LIMIT) and (
+            return (abs(vehicle.y - light.position[1]) < config["LIGHT_LIMIT"]) and (
                 vehicle.y > light.position[1]
             )
         elif light.direction == "S":
-            return (abs(vehicle.y - light.position[1]) < LIGHT_LIMIT) and (
+            return (abs(vehicle.y - light.position[1]) < config["LIGHT_LIMIT"]) and (
                 vehicle.y < light.position[1]
             )
         elif light.direction == "E":
-            return (abs(vehicle.x - light.position[0]) < LIGHT_LIMIT) and (
+            return (abs(vehicle.x - light.position[0]) < config["LIGHT_LIMIT"]) and (
                 vehicle.x < light.position[0]
             )
         elif light.direction == "W":
-            return (abs(vehicle.x - light.position[0]) < LIGHT_LIMIT) and (
+            return (abs(vehicle.x - light.position[0]) < config["LIGHT_LIMIT"]) and (
                 vehicle.x > light.position[0]
             )
 
@@ -128,7 +128,7 @@ class Intersection:
         dx = vehicle1.x - vehicle2.x
         dy = vehicle1.y - vehicle2.y
         distance = math.hypot(dx, dy)
-        return distance < VEHICLE_SIZE
+        return distance < config["VEHICLE_SIZE"]
 
     def __vehicle_will_collide_same_direction(self, vehicle1, vehicle2):
         if vehicle1.initial_direction != vehicle2.initial_direction:
@@ -151,7 +151,7 @@ class Intersection:
             else:
                 distance = vehicle1.x - (vehicle2.x + vehicle2.size)
 
-        return same_lane and abs(distance) <= VEHICLE_SPACING
+        return same_lane and abs(distance) <= config["VEHICLE_SPACING"]
 
     def __is_behind(self, rear, front):
         if rear.has_turned or front.has_turned:
@@ -185,10 +185,10 @@ class Intersection:
 
     def __control_vehicle_out_of_bounds(self, vehicle):
         if vehicle.has_moved and (
-            (vehicle.final_direction == "N" and vehicle.y < -VEHICLE_SIZE)
-            or (vehicle.final_direction == "S" and vehicle.y > WINDOW_HEIGHT)
-            or (vehicle.final_direction == "E" and vehicle.x > WINDOW_WIDTH)
-            or (vehicle.final_direction == "W" and vehicle.x < -VEHICLE_SIZE)
+            (vehicle.final_direction == "N" and vehicle.y < -config["VEHICLE_SIZE"])
+            or (vehicle.final_direction == "S" and vehicle.y > config["WINDOW_HEIGHT"])
+            or (vehicle.final_direction == "E" and vehicle.x > config["WINDOW_WIDTH"])
+            or (vehicle.final_direction == "W" and vehicle.x < -config["VEHICLE_SIZE"])
         ):
             self.__rearrange_vehicle(vehicle)
 
