@@ -218,7 +218,8 @@ class Vehicle:
         ):
             self.has_moved = True
 
-    def draw(self, screen):
-        pygame.draw.rect(
-            screen, (0, 255, 255), (self.x, self.y, self.size, self.size), 0, 1
-        )
+    def restart_to_initial_state(self):
+        self.calculate_initial_position()
+        self.has_moved = False
+        self.has_turned = False
+        self.is_turning = False

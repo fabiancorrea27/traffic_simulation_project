@@ -68,6 +68,7 @@ class MainView:
                     self.form.active_start_button()
                     self.form.active_lights_time_panel_inputs()
                     self.is_simulation_running = False
+                    self.intersection.restart_to_initial_state()
             if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
                 self.form.lights_time_panel.verify_text_entry_values()
         return True

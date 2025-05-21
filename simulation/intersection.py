@@ -54,30 +54,13 @@ class Intersection:
         vehicle.calculate_turning_limit()
 
     def add_vehicles(self, amount, direction):
-        offset = 0
         for _ in range(amount):
             vehicle = Vehicle(direction, direction)
             self.__change_vehicle_random_final_direction(vehicle)
             vehicle.calculate_turning_limit()
-            random_spacing = random.randint(0, 30)
-            total_spacing = (
-                config["VEHICLE_SIZE"] + config["VEHICLE_SPACING"] + random_spacing
-            )
-
-            if direction == "N":
-                vehicle.y += offset
-                offset += total_spacing
-            elif direction == "S":
-                vehicle.y -= offset
-                offset += total_spacing
-            elif direction == "E":
-                vehicle.x -= offset
-                offset += total_spacing
-            elif direction == "W":
-                vehicle.x += offset
-                offset += total_spacing
-
             self.vehicles[direction].append(vehicle)
+
+        self.__locate_vehicles_by_direction(direction)
 
     def __change_vehicle_random_final_direction(self, vehicle):
         if vehicle.initial_direction == "N":
@@ -88,6 +71,26 @@ class Intersection:
             vehicle.final_direction = random.choice(["E", "N", "S"])
         elif vehicle.initial_direction == "W":
             vehicle.final_direction = random.choice(["W", "N", "S"])
+
+    def __locate_vehicles_by_direction(self, direction):
+        offset = 0
+        for vehicle in self.vehicles[direction]:
+            random_spacing = random.randint(0, 30)
+            total_spacing = (
+                config["VEHICLE_SIZE"] + config["VEHICLE_SPACING"] + random_spacing
+            )
+            if vehicle.initial_direction == "N":
+                vehicle.y += offset
+                offset += total_spacing
+            elif vehicle.initial_direction == "S":
+                vehicle.y -= offset
+                offset += total_spacing
+            elif vehicle.initial_direction == "E":
+                vehicle.x -= offset
+                offset += total_spacing
+            elif vehicle.initial_direction == "W":
+                vehicle.x += offset
+                offset += total_spacing
 
     def update(self):
         vehicle_list = [v for sublist in self.vehicles.values() for v in sublist]
@@ -229,10 +232,11 @@ class Intersection:
             if self.__change_light_state(lights_order[i], toggle_timer):
                 return
             else:
-                if i == len(lights_order) and self.traffic_lights[lights_order[i]].was_green:
+                if (
+                    i == len(lights_order)
+                    and self.traffic_lights[lights_order[i]].was_green
+                ):
                     self.__restart_lights_condition()
-                    
-                    
 
     def __change_light_state(self, direction, toggle_timer):
         yellow_time = config["YELLOW_LIGHT_TIME"]
@@ -259,11 +263,25 @@ class Intersection:
 
         return False if light.state != GREEN else True
 
-
     def __restart_lights_condition(self):
         for light in self.traffic_lights.values():
             light.was_green = False
-        
+
     def change_light_times(self, light_direction, green_time):
         light = self.traffic_lights[light_direction]
         light.green_time = green_time
+        
+    def restart_to_initial_state(self):
+        
+        for key in self.vehicles.keys():
+            for vehicle in self.vehicles[key]:
+                vehicle.restart_to_initial_state()
+        
+        for key in self.traffic_lights.keys():
+            self.traffic_lights[key].was_green = False
+        
+        for light in self.traffic_lights.values():
+            light.was_green = False
+            light.state = RED
+            
+        self.__configure_first_light()
