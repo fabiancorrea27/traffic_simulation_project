@@ -24,14 +24,9 @@ def main():
         intersection_pojo.traffic_lights = intersection.traffic_lights
         intersection_pojo.vehicles = intersection.vehicles
         if main_view.is_simulation_running:
-            if not is_vehicles_collided:
                 toggle_timer += 1
-                try:
-                    intersection.check_lights_state(toggle_timer / 60)
-                    intersection.update()
-                except Exception as e:
-                    is_vehicles_collided = True
-                    print(e)
+                intersection.check_lights_state(toggle_timer / 60)
+                intersection.update()
 
         if not main_view.update(intersection_pojo):
             running = False

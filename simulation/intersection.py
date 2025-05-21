@@ -8,16 +8,17 @@ from .traffic_light import TrafficLight
 from .exceptions import CollisionErrorException
 
 
-class Intersection():
+class Intersection:
     def __init__(self):
         # Semáforos por dirección
         self.traffic_lights = {
-            "N": TrafficLight("N", RED),
-            "S": TrafficLight("S", RED),
+            "N": TrafficLight("N"),
+            "S": TrafficLight("S"),
             "E": TrafficLight("E"),
             "W": TrafficLight("W"),
         }
         self.__configure_lights_time()
+        self.__configure_first_light()
         # Vehículos entrando desde el norte
         self.vehicles = {
             "N": [],
@@ -40,6 +41,10 @@ class Intersection():
             elif l.direction == "W":
                 l.red_time = config["RED_LIGHT_TIME"]
                 l.green_time = config["DEFAULT_GREEN_WEST_LIGHT_TIME"]
+
+    def __configure_first_light(self):
+        lights_order = config["TRAFFIC_LIGHTS_ORDER"]
+        self.traffic_lights[lights_order[1]].state = GREEN
 
     def add_vehicle(self, direction):
         self.vehicles[direction].append(Vehicle(direction))
@@ -132,7 +137,7 @@ class Intersection():
             vehicle1.initial_direction != vehicle2.initial_direction
         ):
             if self.__vehicle_will_collide_while_turning(vehicle1, vehicle2):
-                raise CollisionErrorException()
+                pass
         else:
             if self.__vehicle_will_collide_same_direction(vehicle1, vehicle2):
                 if self.__is_behind(vehicle1, vehicle2):
@@ -220,30 +225,45 @@ class Intersection():
 
     def check_lights_state(self, toggle_timer):
         lights_order = config["TRAFFIC_LIGHTS_ORDER"]
-        for light in self.traffic_lights.values():
-            self.__change_light_state(light.direction, toggle_timer)
+        for i in lights_order.keys():
+            if self.__change_light_state(lights_order[i], toggle_timer):
+                return
+            else:
+                if i == len(lights_order) and self.traffic_lights[lights_order[i]].was_green:
+                    self.__restart_lights_condition()
+                    
+                    
 
     def __change_light_state(self, direction, toggle_timer):
         yellow_time = config["YELLOW_LIGHT_TIME"]
         light = self.traffic_lights[direction]
-        if toggle_timer > 0:
-            if (light.state == YELLOW) and (toggle_timer % yellow_time == 0):
-                if light.last_state == RED:
-                    light.state = GREEN
-                else:
-                    light.state = RED
-                return True
-            else:
-                if (light.state == RED) and (toggle_timer % light.red_time == 0):
-                    light.last_state = light.state
-                    light.state = YELLOW
-                    return True
-                elif (light.state == GREEN) and (toggle_timer % light.green_time == 0):
-                    light.last_state = light.state
-                    light.state = YELLOW
-                    return True
-        return False
 
+        if toggle_timer <= 0:
+            return False
+
+        if light.state == YELLOW:
+            if toggle_timer % yellow_time == 0:
+                light.state = GREEN if light.last_state == RED else RED
+            return True
+
+        if light.state == RED and not light.was_green:
+            light.last_state = light.state
+            light.state = YELLOW
+            return True
+
+        if light.state == GREEN and toggle_timer % light.green_time == 0:
+            light.last_state = light.state
+            light.state = YELLOW
+            light.was_green = True
+            return True
+
+        return False if light.state != GREEN else True
+
+
+    def __restart_lights_condition(self):
+        for light in self.traffic_lights.values():
+            light.was_green = False
+        
     def change_light_times(self, light_direction, green_time):
         light = self.traffic_lights[light_direction]
         light.green_time = green_time

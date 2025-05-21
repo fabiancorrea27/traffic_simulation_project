@@ -1,11 +1,12 @@
-from config import config, GREEN
+from config import RED, config, GREEN
 
 class TrafficLight:
-    def __init__(self, direction, initial_state = GREEN):
+    def __init__(self, direction, initial_state = RED):
         self.direction = direction
         self.position = self.__calculate_position()
         self.state = initial_state
-        self.last_state = None
+        self.was_green = False
+        self.last_state = GREEN
         self.red_time = 10
         self.green_time = 10
         
