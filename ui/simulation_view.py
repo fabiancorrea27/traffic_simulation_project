@@ -13,7 +13,7 @@ class SimulationView:
     ):
         self.screen.fill(WHITE)
 
-        center = (config["WINDOW_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
         pygame.draw.rect(
             self.screen,
             GRAY,
@@ -30,7 +30,7 @@ class SimulationView:
             (
                 0,
                 center[1] - config["ROAD_WIDTH"] // 2,
-                config["WINDOW_WIDTH"],
+                config["SIMULATION_WIDTH"],
                 config["ROAD_WIDTH"],
             ),
         )

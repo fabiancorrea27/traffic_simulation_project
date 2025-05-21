@@ -8,16 +8,16 @@ from .traffic_light import TrafficLight
 from .exceptions import CollisionErrorException
 
 
-class Intersection:
+class Intersection():
     def __init__(self):
         # Semáforos por dirección
         self.traffic_lights = {
-            "N": TrafficLight("N"),
-            "S": TrafficLight("S"),
+            "N": TrafficLight("N", RED),
+            "S": TrafficLight("S", RED),
             "E": TrafficLight("E"),
             "W": TrafficLight("W"),
         }
-
+        self.__configure_lights_time()
         # Vehículos entrando desde el norte
         self.vehicles = {
             "N": [],
@@ -25,6 +25,21 @@ class Intersection:
             "E": [],
             "W": [],
         }
+
+    def __configure_lights_time(self):
+        for l in self.traffic_lights.values():
+            if l.direction == "N":
+                l.red_time = config["RED_LIGHT_TIME"]
+                l.green_time = config["DEFAULT_GREEN_NORTH_LIGHT_TIME"]
+            elif l.direction == "S":
+                l.red_time = config["RED_LIGHT_TIME"]
+                l.green_time = config["DEFAULT_GREEN_SOUTH_LIGHT_TIME"]
+            elif l.direction == "E":
+                l.red_time = config["RED_LIGHT_TIME"]
+                l.green_time = config["DEFAULT_GREEN_EAST_LIGHT_TIME"]
+            elif l.direction == "W":
+                l.red_time = config["RED_LIGHT_TIME"]
+                l.green_time = config["DEFAULT_GREEN_WEST_LIGHT_TIME"]
 
     def add_vehicle(self, direction):
         self.vehicles[direction].append(Vehicle(direction))
@@ -34,14 +49,15 @@ class Intersection:
         vehicle.calculate_turning_limit()
 
     def add_vehicles(self, amount, direction):
-        offset = 0  # Controla la acumulación de la posición
+        offset = 0
         for _ in range(amount):
             vehicle = Vehicle(direction, direction)
             self.__change_vehicle_random_final_direction(vehicle)
             vehicle.calculate_turning_limit()
-            # Espacio aleatorio adicional (por ejemplo entre 0 y 30 px)
             random_spacing = random.randint(0, 30)
-            total_spacing = config["VEHICLE_SIZE"] + config["VEHICLE_SPACING"] + random_spacing
+            total_spacing = (
+                config["VEHICLE_SIZE"] + config["VEHICLE_SPACING"] + random_spacing
+            )
 
             if direction == "N":
                 vehicle.y += offset
@@ -187,7 +203,10 @@ class Intersection:
         if vehicle.has_moved and (
             (vehicle.final_direction == "N" and vehicle.y < -config["VEHICLE_SIZE"])
             or (vehicle.final_direction == "S" and vehicle.y > config["WINDOW_HEIGHT"])
-            or (vehicle.final_direction == "E" and vehicle.x > config["WINDOW_WIDTH"])
+            or (
+                vehicle.final_direction == "E"
+                and vehicle.x > config["SIMULATION_WIDTH"]
+            )
             or (vehicle.final_direction == "W" and vehicle.x < -config["VEHICLE_SIZE"])
         ):
             self.__rearrange_vehicle(vehicle)
@@ -199,32 +218,32 @@ class Intersection:
         vehicle.has_moved = False
         vehicle.has_turned = False
 
-    def change_lights(self):
-        light = self.traffic_lights["N"]
-
-        if light.state in (GREEN, RED):
-            self.__change_lights_last_state()
-            for dir in self.traffic_lights:
-                self.traffic_lights[dir].state = YELLOW
-            return
-        else:
-            if light.last_state == RED:
-                self.traffic_lights["N"].state = GREEN
-                self.traffic_lights["S"].state = GREEN
-                self.traffic_lights["E"].state = RED
-                self.traffic_lights["W"].state = RED
-            else:
-                self.traffic_lights["N"].state = RED
-                self.traffic_lights["S"].state = RED
-                self.traffic_lights["E"].state = GREEN
-                self.traffic_lights["W"].state = GREEN
-
-    def __change_lights_last_state(self):
+    def check_lights_state(self, toggle_timer):
+        lights_order = config["TRAFFIC_LIGHTS_ORDER"]
         for light in self.traffic_lights.values():
-            light.last_state = light.state
+            self.__change_light_state(light.direction, toggle_timer)
 
-    def draw(self, screen):
-        for v in (
-            v for vehicle_list in self.vehicles.copy().values() for v in vehicle_list
-        ):
-            v.draw(screen)
+    def __change_light_state(self, direction, toggle_timer):
+        yellow_time = config["YELLOW_LIGHT_TIME"]
+        light = self.traffic_lights[direction]
+        if toggle_timer > 0:
+            if (light.state == YELLOW) and (toggle_timer % yellow_time == 0):
+                if light.last_state == RED:
+                    light.state = GREEN
+                else:
+                    light.state = RED
+                return True
+            else:
+                if (light.state == RED) and (toggle_timer % light.red_time == 0):
+                    light.last_state = light.state
+                    light.state = YELLOW
+                    return True
+                elif (light.state == GREEN) and (toggle_timer % light.green_time == 0):
+                    light.last_state = light.state
+                    light.state = YELLOW
+                    return True
+        return False
+
+    def change_light_times(self, light_direction, green_time):
+        light = self.traffic_lights[light_direction]
+        light.green_time = green_time

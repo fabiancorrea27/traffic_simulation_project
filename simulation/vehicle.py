@@ -20,7 +20,7 @@ class Vehicle:
         self.calculate_initial_position()
 
     def calculate_initial_position(self):
-        center = (config["WINDOW_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
         position = (0, 0)
         if self.initial_direction == "E":
             position = (
@@ -29,7 +29,7 @@ class Vehicle:
             )
         elif self.initial_direction == "W":
             position = (
-                config["WINDOW_WIDTH"],
+                config["SIMULATION_WIDTH"],
                 center[1] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
             )
         elif self.initial_direction == "N":
@@ -47,7 +47,7 @@ class Vehicle:
 
     def calculate_turning_limit(self):
         top, bottom, left, right = self.__calculate_center_limits()
-        center = (config["WINDOW_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
 
         limit_map = {
             ("N", "E"): (center[0] + config["ROAD_WIDTH"] // 4, bottom),
@@ -79,7 +79,7 @@ class Vehicle:
         self.turning_limit = (x_limit, y_limit)
 
     def __calculate_circle_turn_center(self):
-        center = (config["WINDOW_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
         half_road = config["ROAD_WIDTH"] // 2
         limit_map = {
             ("N", "E"): (
@@ -110,8 +110,8 @@ class Vehicle:
     def __calculate_center_limits(self):
         top_limit = config["WINDOW_HEIGHT"] // 2 - config["ROAD_WIDTH"] // 2
         bottom_limit = config["WINDOW_HEIGHT"] // 2 + config["ROAD_WIDTH"] // 2
-        left_limit = config["WINDOW_WIDTH"] // 2 - config["ROAD_WIDTH"] // 2
-        right_limit = config["WINDOW_WIDTH"] // 2 + config["ROAD_WIDTH"] // 2
+        left_limit = config["SIMULATION_WIDTH"] // 2 - config["ROAD_WIDTH"] // 2
+        right_limit = config["SIMULATION_WIDTH"] // 2 + config["ROAD_WIDTH"] // 2
         return top_limit, bottom_limit, left_limit, right_limit
 
     def update(self):
@@ -172,7 +172,7 @@ class Vehicle:
         self.y = y_center + radius * math.sin(self.turn_angle * angle_direction)
 
     def __adjust_position_after_turn(self):
-        center = (config["WINDOW_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
         if self.final_direction == "N":
             self.x = center[0] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2
         elif self.final_direction == "S":
@@ -214,7 +214,7 @@ class Vehicle:
             and (self.initial_direction == "S" and self.y > 0)
             or (self.initial_direction == "N" and self.y < config["WINDOW_HEIGHT"])
             or (self.initial_direction == "E" and self.x > 0)
-            or (self.initial_direction == "W" and self.x < config["WINDOW_WIDTH"])
+            or (self.initial_direction == "W" and self.x < config["SIMULATION_WIDTH"])
         ):
             self.has_moved = True
 

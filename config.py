@@ -1,13 +1,27 @@
 config = {
     "WINDOW_WIDTH": 1000,
     "WINDOW_HEIGHT": 600,
+    "SIMULATION_WIDTH": 800,
+    "FORM_WIDTH": 200,
     "ROAD_WIDTH": 200,
+    "UI_ELEMENTS_SPACING": 5,
     "VEHICLE_SIZE": 20,
     "VEHICLE_SPACING": 20,
     "VEHICLE_SPEED": 2,
+    "TURNING_SPEED": 0.05,
     "LIGHT_RADIUS": 10,
     "LIGHT_LIMIT": 50,
-    "TURNING_SPEED": 0.05
+    "YELLOW_LIGHT_TIME": 0.5,
+    "RED_LIGHT_TIME": 8.9,
+    "DEFAULT_GREEN_NORTH_LIGHT_TIME": 1.5,
+    "DEFAULT_GREEN_SOUTH_LIGHT_TIME": 2.3,
+    "DEFAULT_GREEN_EAST_LIGHT_TIME": 4.1,
+    "DEFAULT_GREEN_WEST_LIGHT_TIME": 4.1,
+    "NORTH_TITLE": "R",
+    "SOUTH_TITLE": "Parque de las aguas",
+    "EAST_TITLE": "Glorieta",
+    "WEST_TITLE": "Sanitas",
+    "TRAFFIC_LIGHTS_ORDER": {"N": 4, "S": 3, "E": 1, "W": 2},
 }
 # Colores
 WHITE = (255, 255, 255)
