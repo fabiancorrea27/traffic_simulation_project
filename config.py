@@ -5,7 +5,7 @@ config = {
     "FORM_WIDTH": 200,
     "ROAD_WIDTH": 200,
     "UI_ELEMENTS_SPACING": 5,
-    "VEHICLE_SIZE": 20,
+    "VEHICLE_WIDTH": 20,
     "VEHICLE_SPACING": 20,
     "VEHICLE_SPEED": 2,
     "TURNING_SPEED": 0.05,
@@ -22,8 +22,8 @@ config = {
     "EAST_TITLE": "Glorieta",
     "WEST_TITLE": "Sanitas",
     "TRAFFIC_LIGHTS_ORDER": {1: "E", 2: "W", 3: "S", 4: "N"},
+    "VEHICLES_ASSETS_PATH": "assets/vehicles",
 }
-# Colores
 WHITE = (255, 255, 255)
 GRAY = (50, 50, 50)
 RED = (200, 0, 0)

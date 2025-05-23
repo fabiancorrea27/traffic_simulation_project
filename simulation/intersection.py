@@ -10,7 +10,6 @@ from .exceptions import CollisionErrorException
 
 class Intersection:
     def __init__(self):
-        # Semáforos por dirección
         self.traffic_lights = {
             "N": TrafficLight("N"),
             "S": TrafficLight("S"),
@@ -19,13 +18,13 @@ class Intersection:
         }
         self.__configure_lights_time()
         self.__configure_first_light()
-        # Vehículos entrando desde el norte
         self.vehicles = {
             "N": [],
             "S": [],
             "E": [],
             "W": [],
         }
+        self.simulation_view = None
 
     def __configure_lights_time(self):
         for l in self.traffic_lights.values():
@@ -57,6 +56,9 @@ class Intersection:
         for _ in range(amount):
             vehicle = Vehicle(direction, direction)
             self.__change_vehicle_random_final_direction(vehicle)
+            self.__change_vehicle_random_asset(vehicle)
+            vehicle.calculate_size()
+            vehicle.calculate_initial_position()
             vehicle.calculate_turning_limit()
             self.vehicles[direction].append(vehicle)
 
@@ -72,24 +74,35 @@ class Intersection:
         elif vehicle.initial_direction == "W":
             vehicle.final_direction = random.choice(["W", "N", "S"])
 
+    def __change_vehicle_random_asset(self, vehicle):
+        vehicle.asset = random.choice(
+            self.simulation_view.vehicles_assets[vehicle.initial_direction]
+        )
+
     def __locate_vehicles_by_direction(self, direction):
         offset = 0
         for vehicle in self.vehicles[direction]:
             random_spacing = random.randint(0, 30)
-            total_spacing = (
-                config["VEHICLE_SIZE"] + config["VEHICLE_SPACING"] + random_spacing
-            )
+            total_spacing = config["VEHICLE_SPACING"] + random_spacing
             if vehicle.initial_direction == "N":
+                total_spacing += vehicle.height
                 vehicle.y += offset
+                vehicle.initial_offset = offset
                 offset += total_spacing
             elif vehicle.initial_direction == "S":
+                total_spacing += vehicle.height
                 vehicle.y -= offset
+                vehicle.initial_offset = offset
                 offset += total_spacing
             elif vehicle.initial_direction == "E":
+                total_spacing += vehicle.width
                 vehicle.x -= offset
+                vehicle.initial_offset = offset
                 offset += total_spacing
             elif vehicle.initial_direction == "W":
+                total_spacing += vehicle.width
                 vehicle.x += offset
+                vehicle.initial_offset = offset
                 offset += total_spacing
 
     def update(self):
@@ -107,7 +120,6 @@ class Intersection:
             v.update()
             v.is_stopped = False
 
-    # If a light is yellow or red, stop the vehicle
     def __control_light_car_stop_action(self, vehicle):
         light = self.traffic_lights[vehicle.initial_direction]
         if light.state in (YELLOW, RED) and self.__verify_vehicle_nearby_light(
@@ -115,26 +127,28 @@ class Intersection:
         ):
             vehicle.is_stopped = True
 
-    # Verify is vehicle is near to a light
     def __verify_vehicle_nearby_light(self, vehicle, light):
         if light.direction == "N":
-            return (abs(vehicle.y - light.position[1]) < config["LIGHT_LIMIT"]) and (
-                vehicle.y > light.position[1]
-            )
+            return (
+                abs(vehicle.y - light.position[1] + config["LIGHT_RADIUS"] * 2)
+                < config["LIGHT_LIMIT"]
+            ) and (vehicle.y > light.position[1])
         elif light.direction == "S":
-            return (abs(vehicle.y - light.position[1]) < config["LIGHT_LIMIT"]) and (
-                vehicle.y < light.position[1]
-            )
+            return (
+                abs(vehicle.y + vehicle.height - light.position[1])
+                < config["LIGHT_LIMIT"]
+            ) and (vehicle.y < light.position[1])
         elif light.direction == "E":
-            return (abs(vehicle.x - light.position[0]) < config["LIGHT_LIMIT"]) and (
-                vehicle.x < light.position[0]
-            )
+            return (
+                abs(vehicle.x + vehicle.width - light.position[0])
+                < config["LIGHT_LIMIT"]
+            ) and (vehicle.x < light.position[0])
         elif light.direction == "W":
-            return (abs(vehicle.x - light.position[0]) < config["LIGHT_LIMIT"]) and (
-                vehicle.x > light.position[0]
-            )
+            return (
+                abs(vehicle.x - light.position[0] + config["LIGHT_RADIUS"] * 2)
+                < config["LIGHT_LIMIT"]
+            ) and (vehicle.x > light.position[0])
 
-    # Controll vehicles crash
     def __control_vehicles_crash(self, vehicle1, vehicle2):
         if (vehicle1.is_turning or vehicle2.is_turning) and (
             vehicle1.initial_direction != vehicle2.initial_direction
@@ -152,7 +166,7 @@ class Intersection:
         dx = vehicle1.x - vehicle2.x
         dy = vehicle1.y - vehicle2.y
         distance = math.hypot(dx, dy)
-        return distance < config["VEHICLE_SIZE"]
+        return distance < config["VEHICLE_WIDTH"]
 
     def __vehicle_will_collide_same_direction(self, vehicle1, vehicle2):
         if vehicle1.initial_direction != vehicle2.initial_direction:
@@ -162,18 +176,18 @@ class Intersection:
         distance = 0
 
         if vehicle1.initial_direction in ("N", "S"):
-            same_lane = abs(vehicle1.x - vehicle2.x) < vehicle1.size
+            same_lane = abs(vehicle1.x - vehicle2.x) < vehicle1.width
             if vehicle1.y > vehicle2.y:
-                distance = vehicle1.y - (vehicle2.y + vehicle2.size)
+                distance = vehicle1.y - (vehicle2.y + vehicle2.height)
             else:
-                distance = vehicle2.y - (vehicle1.y + vehicle1.size)
+                distance = vehicle2.y - (vehicle1.y + vehicle1.height)
 
         elif vehicle1.initial_direction in ("E", "W"):
-            same_lane = abs(vehicle1.y - vehicle2.y) < vehicle1.size
+            same_lane = abs(vehicle1.y - vehicle2.y) < vehicle1.height
             if vehicle1.x < vehicle2.x:
-                distance = vehicle2.x - (vehicle1.x + vehicle1.size)
+                distance = vehicle2.x - (vehicle1.x + vehicle1.width)
             else:
-                distance = vehicle1.x - (vehicle2.x + vehicle2.size)
+                distance = vehicle1.x - (vehicle2.x + vehicle2.width)
 
         return same_lane and abs(distance) <= config["VEHICLE_SPACING"]
 
@@ -209,22 +223,26 @@ class Intersection:
 
     def __control_vehicle_out_of_bounds(self, vehicle):
         if vehicle.has_moved and (
-            (vehicle.final_direction == "N" and vehicle.y < -config["VEHICLE_SIZE"])
+            (vehicle.final_direction == "N" and vehicle.y < -vehicle.height)
             or (vehicle.final_direction == "S" and vehicle.y > config["WINDOW_HEIGHT"])
             or (
                 vehicle.final_direction == "E"
                 and vehicle.x > config["SIMULATION_WIDTH"]
             )
-            or (vehicle.final_direction == "W" and vehicle.x < -config["VEHICLE_SIZE"])
+            or (vehicle.final_direction == "W" and vehicle.x < -vehicle.width)
         ):
             self.__rearrange_vehicle(vehicle)
 
     def __rearrange_vehicle(self, vehicle):
+        if vehicle.changed_asset:
+            self.simulation_view.adjust_vehicle_asset(vehicle)
+            vehicle.calculate_size()
         self.__change_vehicle_random_final_direction(vehicle)
         vehicle.calculate_turning_limit()
         vehicle.calculate_initial_position()
         vehicle.has_moved = False
         vehicle.has_turned = False
+        vehicle.changed_asset = False
 
     def check_lights_state(self, toggle_timer):
         lights_order = config["TRAFFIC_LIGHTS_ORDER"]
@@ -270,18 +288,18 @@ class Intersection:
     def change_light_times(self, light_direction, green_time):
         light = self.traffic_lights[light_direction]
         light.green_time = green_time
-        
+
     def restart_to_initial_state(self):
-        
+
         for key in self.vehicles.keys():
             for vehicle in self.vehicles[key]:
                 vehicle.restart_to_initial_state()
-        
+
         for key in self.traffic_lights.keys():
             self.traffic_lights[key].was_green = False
-        
+
         for light in self.traffic_lights.values():
             light.was_green = False
             light.state = RED
-            
+
         self.__configure_first_light()

@@ -3,47 +3,40 @@ import pygame
 
 from config import GREEN, YELLOW, config
 
+
 class Vehicle:
     def __init__(self, initial_direction, final_direction):
-        self.initial_direction = initial_direction  # 'N', 'S', 'E', 'W'
+        self.initial_direction = initial_direction 
         self.final_direction = final_direction
         self.x = 0
         self.y = 0
+        self.initial_offset = 0
         self.turn_angle = 0
         self.speed = config["VEHICLE_SPEED"]
-        self.size = config["VEHICLE_SIZE"]
+        self.width = config["VEHICLE_WIDTH"]
+        self.height = config["VEHICLE_WIDTH"]
         self.is_stopped = False
         self.is_turning = False
         self.has_turned = False
         self.has_moved = False
         self.turning_limit = (None, None)
-        self.calculate_initial_position()
+        self.asset = None
+        self.changed_asset = False
 
     def calculate_initial_position(self):
         center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
-        position = (0, 0)
         if self.initial_direction == "E":
-            position = (
-                -config["VEHICLE_SIZE"],
-                center[1] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
-            )
+            self.x = -self.width - self.initial_offset
+            self.y = center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2
         elif self.initial_direction == "W":
-            position = (
-                config["SIMULATION_WIDTH"],
-                center[1] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
-            )
+            self.x = config["SIMULATION_WIDTH"] + self.initial_offset	
+            self.y = center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2
         elif self.initial_direction == "N":
-            position = (
-                center[0] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
-                config["WINDOW_HEIGHT"],
-            )
+            self.x = center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2
+            self.y = config["WINDOW_HEIGHT"] + self.initial_offset
         elif self.initial_direction == "S":
-            position = (
-                center[0] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
-                -config["VEHICLE_SIZE"],
-            )
-        self.x = position[0]
-        self.y = position[1]
+            self.x = center[0] - config["ROAD_WIDTH"] // 4 - self.width // 2
+            self.y = -self.height - self.initial_offset
 
     def calculate_turning_limit(self):
         top, bottom, left, right = self.__calculate_center_limits()
@@ -56,19 +49,19 @@ class Vehicle:
             ("S", "W"): (center[0] - config["ROAD_WIDTH"] // 4, top),
             ("E", "N"): (
                 center[0],
-                center[1] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
+                center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2,
             ),
             ("E", "S"): (
                 left,
-                center[1] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
+                center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2,
             ),
             ("W", "N"): (
                 right,
-                center[1] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
+                center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2,
             ),
             ("W", "S"): (
                 center[0],
-                center[1] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2,
+                center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2,
             ),
         }
 
@@ -114,6 +107,10 @@ class Vehicle:
         right_limit = config["SIMULATION_WIDTH"] // 2 + config["ROAD_WIDTH"] // 2
         return top_limit, bottom_limit, left_limit, right_limit
 
+    def calculate_size(self):
+        self.width = self.asset.get_width()
+        self.height = self.asset.get_height()
+
     def update(self):
         x_limit, y_limit = self.turning_limit
         if not self.turning_limit.__contains__(None):
@@ -123,30 +120,25 @@ class Vehicle:
                 and not self.is_turning
             ):
                 self.is_turning = True
-                self.turn_angle = self.__turn_angle_limits()[0]
+                self.turn_angle = self.turn_angle_limits()[0]
         self.__move()
         self.__verify_movement()
 
     def __move(self):
         if self.is_turning:
-            self.turn_angle += (
-                config["TURNING_SPEED"] if self.speed > 0 else 0
-            )  # velocidad del giro
-            if self.turn_angle > self.__turn_angle_limits()[1]:
-                self.turn_angle = self.__turn_angle_limits()[1]
+            self.turn_angle += config["TURNING_SPEED"] if self.speed > 0 else 0
+            if self.turn_angle > self.turn_angle_limits()[1]:
+                self.turn_angle = self.turn_angle_limits()[1]
                 self.is_turning = False
-                self.x = round(self.x)
-                self.y = round(self.y)
-                self.__adjust_position_after_turn()
                 self.has_turned = True
                 self.turn_angle = 0
+                self.turning_limit = (None, None)
             else:
                 self.__turn_vehicle()
         else:
-            # movimiento normal en línea recta
             self.__move_straight()
 
-    def __turn_angle_limits(self):
+    def turn_angle_limits(self):
         turning_map = {
             ("W", "N"): (math.pi / 2, math.pi, 1),
             ("W", "S"): (math.pi / 2, math.pi, -1),
@@ -167,20 +159,45 @@ class Vehicle:
     def __turn_vehicle(self):
         radius = config["ROAD_WIDTH"] // 4
         x_center, y_center = self.__calculate_circle_turn_center()
-        angle_direction = self.__turn_angle_limits()[2]
+        angle_direction = self.turn_angle_limits()[2]
         self.x = x_center + radius * math.cos(self.turn_angle * angle_direction)
         self.y = y_center + radius * math.sin(self.turn_angle * angle_direction)
 
-    def __adjust_position_after_turn(self):
+    def adjust_position_after_turn(self):
+        self.x = round(self.x)
+        self.y = round(self.y)
         center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
         if self.final_direction == "N":
-            self.x = center[0] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2
+            self.x = center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2
         elif self.final_direction == "S":
-            self.x = center[0] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2
+            self.x = center[0] - config["ROAD_WIDTH"] // 4 - self.width // 2
         elif self.final_direction == "E":
-            self.y = center[1] + config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2
+            self.y = center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2
         elif self.final_direction == "W":
-            self.y = center[1] - config["ROAD_WIDTH"] // 4 - config["VEHICLE_SIZE"] // 2
+            self.y = center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2
+            
+    def calculte_position_after_turn(self):
+        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        if self.final_direction == "N":
+            return (
+                center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2,
+                round(self.y),
+            )
+        elif self.final_direction == "S":
+            return (
+                center[0] - config["ROAD_WIDTH"] // 4 - self.width // 2,
+                round(self.y),
+            )
+        elif self.final_direction == "E":
+            return (
+                round(self.x),
+                center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2,
+            )
+        elif self.final_direction == "W":
+            return (
+                round(self.x),
+                center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2,
+            )
 
     def __move_straight(self):
         if self.has_turned:
@@ -217,9 +234,23 @@ class Vehicle:
             or (self.initial_direction == "W" and self.x < config["SIMULATION_WIDTH"])
         ):
             self.has_moved = True
-
+    
+    
+    
     def restart_to_initial_state(self):
-        self.calculate_initial_position()
         self.has_moved = False
+        turn_angle_limits = self.turn_angle_limits()
+        if self.changed_asset:
+            angle = (
+            math.degrees(
+                abs(turn_angle_limits[1] - turn_angle_limits[0])
+            )
+            * turn_angle_limits[2]
+        )
+            self.asset = pygame.transform.rotate(self.asset, angle)
+            self.changed_asset = False
+            self.calculate_size()
         self.has_turned = False
         self.is_turning = False
+        self.turn_angle = 0
+        self.calculate_initial_position()

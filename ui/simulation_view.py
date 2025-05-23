@@ -1,3 +1,4 @@
+import math
 import pygame
 from config import *
 
@@ -44,12 +45,31 @@ class SimulationView:
             )
 
         for vehicle in vehicles_list:
-            pygame.draw.rect(
-                self.screen,
-                (0, 255, 255),
-                (vehicle.x, vehicle.y, vehicle.size, vehicle.size),
-                0,
-                1,
+            vehicle_turn_angle_limits = vehicle.turn_angle_limits()
+            rectangle = pygame.Rect(
+                vehicle.x,
+                vehicle.y,
+                vehicle.width,
+                vehicle.height,
             )
-            
-        
+            angle = (
+                math.degrees(vehicle.turn_angle - vehicle_turn_angle_limits[0])
+                * -vehicle_turn_angle_limits[2]
+            )
+            rotated_asset = vehicle.asset
+            if vehicle.is_turning:
+                rotated_asset = pygame.transform.rotate(rotated_asset, angle)
+            elif vehicle.has_turned and not vehicle.changed_asset:
+                angle = (
+                    math.degrees(
+                        abs(vehicle_turn_angle_limits[1] - vehicle_turn_angle_limits[0])
+                    )
+                    * -vehicle_turn_angle_limits[2]
+                )
+                rotated_asset = pygame.transform.rotate(vehicle.asset, angle)
+                vehicle.asset = rotated_asset
+                vehicle.calculate_size()
+                vehicle.adjust_position_after_turn()
+                vehicle.changed_asset = True
+            self.screen.blit(rotated_asset, rectangle.topleft)
+

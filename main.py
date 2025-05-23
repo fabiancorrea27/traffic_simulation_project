@@ -8,13 +8,14 @@ def main():
     main_view = MainView()
     intersection = Intersection()
     main_view.intersection = intersection
+    intersection.simulation_view = main_view
     intersection_pojo = IntersectionPojo(
         intersection.traffic_lights, intersection.vehicles
     )
-    intersection.add_vehicles(23, "N")
-    intersection.add_vehicles(23, "S")
-    intersection.add_vehicles(23, "E")
-    intersection.add_vehicles(23, "W")
+    intersection.add_vehicles(2, "N")
+    intersection.add_vehicles(2, "S")
+    intersection.add_vehicles(2, "E")
+    intersection.add_vehicles(2, "W")
 
     running = True
     is_vehicles_collided = False
