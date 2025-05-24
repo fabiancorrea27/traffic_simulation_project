@@ -32,6 +32,15 @@
     }
   },
 
+  "@counter_label": {
+    "colours": {
+      "dark_bg": "#cbcbcb",
+      "normal_text": "#000000"
+    },
+    "font": {
+      "size": 12
+    }
+  },
   "button": {
     "colours": {
       "normal_bg": "#d4d678",
@@ -69,7 +78,7 @@
       "normal_text": "#000000",
       "selected_text": "#FFFFFF"
     },
-    "misc":{
+    "misc": {
       "text_horiz_alignment": "center"
     }
   }

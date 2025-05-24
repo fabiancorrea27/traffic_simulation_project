@@ -9,10 +9,11 @@ class TrafficLight:
         self.last_state = GREEN
         self.red_time = 10
         self.green_time = 10
+        self.passing_vehicles = 0
         
 
     def __calculate_position(self):
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
         if self.direction == "E":
             position = (center[0] - config["ROAD_WIDTH"] // 2, center[1] + config["ROAD_WIDTH"] // 4)
         elif self.direction == "W":

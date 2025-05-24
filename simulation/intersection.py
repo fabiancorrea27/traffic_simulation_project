@@ -55,7 +55,7 @@ class Intersection:
     def add_vehicles(self, amount, direction):
         for _ in range(amount):
             vehicle = Vehicle(direction, direction)
-            self.__change_vehicle_random_final_direction(vehicle)
+            vehicle.change_random_final_direction()
             self.__change_vehicle_random_asset(vehicle)
             vehicle.calculate_size()
             vehicle.calculate_initial_position()
@@ -63,16 +63,6 @@ class Intersection:
             self.vehicles[direction].append(vehicle)
 
         self.__locate_vehicles_by_direction(direction)
-
-    def __change_vehicle_random_final_direction(self, vehicle):
-        if vehicle.initial_direction == "N":
-            vehicle.final_direction = random.choice(["N", "E", "W"])
-        elif vehicle.initial_direction == "S":
-            vehicle.final_direction = random.choice(["S", "E", "W"])
-        elif vehicle.initial_direction == "E":
-            vehicle.final_direction = random.choice(["E", "N", "S"])
-        elif vehicle.initial_direction == "W":
-            vehicle.final_direction = random.choice(["W", "N", "S"])
 
     def __change_vehicle_random_asset(self, vehicle):
         vehicle.asset = random.choice(
@@ -116,6 +106,7 @@ class Intersection:
 
         for v in vehicle_list:
             v.speed = 0 if v.is_stopped else config["VEHICLE_SPEED"]
+            self.__count_lights_passing_vehicles(v)
             self.__control_vehicle_out_of_bounds(v)
             v.update()
             v.is_stopped = False
@@ -231,18 +222,29 @@ class Intersection:
             )
             or (vehicle.final_direction == "W" and vehicle.x < -vehicle.width)
         ):
-            self.__rearrange_vehicle(vehicle)
+            vehicle.reset(True)
 
-    def __rearrange_vehicle(self, vehicle):
-        if vehicle.changed_asset:
-            self.simulation_view.adjust_vehicle_asset(vehicle)
-            vehicle.calculate_size()
-        self.__change_vehicle_random_final_direction(vehicle)
-        vehicle.calculate_turning_limit()
-        vehicle.calculate_initial_position()
-        vehicle.has_moved = False
-        vehicle.has_turned = False
-        vehicle.changed_asset = False
+    def __count_lights_passing_vehicles(self, vehicle):
+        for light in self.traffic_lights.values():
+            if light.direction == vehicle.initial_direction and not vehicle.has_counted:
+                if light.direction == "N" and vehicle.y < light.position[1]:
+                    light.passing_vehicles += 1
+                    vehicle.has_counted = True
+                elif (
+                    light.direction == "S"
+                    and vehicle.y + vehicle.height > light.position[1]
+                ):
+                    light.passing_vehicles += 1
+                    vehicle.has_counted = True
+                elif (
+                    light.direction == "E"
+                    and vehicle.x + vehicle.width > light.position[0]
+                ):
+                    light.passing_vehicles += 1
+                    vehicle.has_counted = True
+                elif light.direction == "W" and vehicle.x < light.position[0]:
+                    light.passing_vehicles += 1
+                    vehicle.has_counted = True
 
     def check_lights_state(self, toggle_timer):
         lights_order = config["TRAFFIC_LIGHTS_ORDER"]
@@ -284,6 +286,7 @@ class Intersection:
     def __restart_lights_condition(self):
         for light in self.traffic_lights.values():
             light.was_green = False
+            light.passing_vehicles = 0
 
     def change_light_times(self, light_direction, green_time):
         light = self.traffic_lights[light_direction]
@@ -303,3 +306,17 @@ class Intersection:
             light.state = RED
 
         self.__configure_first_light()
+        
+    def traffic_lights_list(self):
+       return [t for t in self.traffic_lights.values()]
+   
+    def vehicles_list(self):
+       return [v for vehicle_list in self.vehicles.copy().values() for v in vehicle_list]    
+
+    def passing_vehicles_dict(self):
+        passing_vehicles_dict = {"N": 0, "S": 0, "E": 0, "W": 0}
+
+        for light in self.traffic_lights.values():
+            passing_vehicles_dict[light.direction] = light.passing_vehicles
+
+        return passing_vehicles_dict

@@ -1,4 +1,5 @@
 import math
+import random
 import pygame
 
 from config import GREEN, YELLOW, config
@@ -6,7 +7,7 @@ from config import GREEN, YELLOW, config
 
 class Vehicle:
     def __init__(self, initial_direction, final_direction):
-        self.initial_direction = initial_direction 
+        self.initial_direction = initial_direction
         self.final_direction = final_direction
         self.x = 0
         self.y = 0
@@ -22,14 +23,15 @@ class Vehicle:
         self.turning_limit = (None, None)
         self.asset = None
         self.changed_asset = False
+        self.has_counted = False
 
     def calculate_initial_position(self):
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
         if self.initial_direction == "E":
             self.x = -self.width - self.initial_offset
             self.y = center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2
         elif self.initial_direction == "W":
-            self.x = config["SIMULATION_WIDTH"] + self.initial_offset	
+            self.x = config["SIMULATION_WIDTH"] + self.initial_offset
             self.y = center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2
         elif self.initial_direction == "N":
             self.x = center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2
@@ -40,7 +42,7 @@ class Vehicle:
 
     def calculate_turning_limit(self):
         top, bottom, left, right = self.__calculate_center_limits()
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
 
         limit_map = {
             ("N", "E"): (center[0] + config["ROAD_WIDTH"] // 4, bottom),
@@ -72,7 +74,7 @@ class Vehicle:
         self.turning_limit = (x_limit, y_limit)
 
     def __calculate_circle_turn_center(self):
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
         half_road = config["ROAD_WIDTH"] // 2
         limit_map = {
             ("N", "E"): (
@@ -166,7 +168,7 @@ class Vehicle:
     def adjust_position_after_turn(self):
         self.x = round(self.x)
         self.y = round(self.y)
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
         if self.final_direction == "N":
             self.x = center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2
         elif self.final_direction == "S":
@@ -175,9 +177,9 @@ class Vehicle:
             self.y = center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2
         elif self.final_direction == "W":
             self.y = center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2
-            
+
     def calculte_position_after_turn(self):
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
         if self.final_direction == "N":
             return (
                 center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2,
@@ -234,23 +236,31 @@ class Vehicle:
             or (self.initial_direction == "W" and self.x < config["SIMULATION_WIDTH"])
         ):
             self.has_moved = True
-    
-    
-    
-    def restart_to_initial_state(self):
-        self.has_moved = False
+
+    def change_random_final_direction(self):
+        if self.initial_direction == "N":
+            self.final_direction = random.choice(["N", "E", "W"])
+        elif self.initial_direction == "S":
+            self.final_direction = random.choice(["S", "E", "W"])
+        elif self.initial_direction == "E":
+            self.final_direction = random.choice(["E", "N", "S"])
+        elif self.initial_direction == "W":
+            self.final_direction = random.choice(["W", "N", "S"])
+
+    def reset(self, change_direction=False):
         turn_angle_limits = self.turn_angle_limits()
         if self.changed_asset:
             angle = (
-            math.degrees(
-                abs(turn_angle_limits[1] - turn_angle_limits[0])
+                math.degrees(abs(turn_angle_limits[1] - turn_angle_limits[0]))
+                * turn_angle_limits[2]
             )
-            * turn_angle_limits[2]
-        )
             self.asset = pygame.transform.rotate(self.asset, angle)
-            self.changed_asset = False
             self.calculate_size()
+        self.change_random_final_direction if change_direction else None
+        self.has_moved = False
         self.has_turned = False
+        self.has_counted = False
+        self.changed_asset = False
         self.is_turning = False
         self.turn_angle = 0
         self.calculate_initial_position()

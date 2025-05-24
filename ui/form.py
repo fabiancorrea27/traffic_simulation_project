@@ -16,6 +16,7 @@ class Form:
         self.lights_time_panel = None
         self.buttons_panel = None
         self.__init_elements()
+        self.update()
 
     def __init_elements(self):
         panel_rect = pygame.Rect(

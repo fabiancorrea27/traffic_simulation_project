@@ -3,6 +3,7 @@ import os
 import pygame
 import pygame_gui
 from config import config
+from .counter_panel import CounterPanel
 from .form import Form
 from .simulation_view import SimulationView
 
@@ -19,6 +20,7 @@ class MainView:
         self.intersection = None
         self.simulation_view = SimulationView(self.screen)
         self.form = Form(self.screen, self.manager)
+        self.counter_panel = CounterPanel(self.screen, self.manager)
         self.is_simulation_running = False
         self.toggle_time = 0
         self.vehicles_assets = {"N": [], "S": [], "E": [], "W": []}
@@ -39,6 +41,10 @@ class MainView:
         config["VEHICLE_WIDTH"] = config["ROAD_WIDTH"] // 6
         config["SIMULATION_WIDTH"] = 3 * config["WINDOW_WIDTH"] / 4
         config["FORM_WIDTH"] = config["WINDOW_WIDTH"] - config["SIMULATION_WIDTH"]
+        config["SIMULATION_CENTER"] = (
+            config["SIMULATION_WIDTH"] // 2,
+            config["WINDOW_HEIGHT"] // 2,
+        )
 
     def __charge_vehicles_assets(self):
         file_folder = config["VEHICLES_ASSETS_PATH"]
@@ -54,19 +60,19 @@ class MainView:
     def __add_assets(self, file_folder, files):
         for f in files:
             transformed_image = self.__transform_image_scale(file_folder, f)
-            for i in ("N", "S", "E", "W"):
-                if i == "N":
-                    self.vehicles_assets[i].append(transformed_image)
-                elif i == "S":
-                    self.vehicles_assets[i].append(
+            for direction in ("N", "S", "E", "W"):
+                if direction == "N":
+                    self.vehicles_assets[direction].append(transformed_image)
+                elif direction == "S":
+                    self.vehicles_assets[direction].append(
                         pygame.transform.flip(transformed_image, False, True)
                     )
-                elif i == "E":
-                    self.vehicles_assets[i].append(
+                elif direction == "E":
+                    self.vehicles_assets[direction].append(
                         pygame.transform.rotate(transformed_image, -90)
                     )
-                elif i == "W":
-                    self.vehicles_assets[i].append(
+                elif direction == "W":
+                    self.vehicles_assets[direction].append(
                         pygame.transform.rotate(transformed_image, 90)
                     )
 
@@ -81,16 +87,16 @@ class MainView:
         )
         return transformed_image
 
-    def update(self, intersection_pojo):
+    def update(self):
         if not self.__check_events():
             return False
         if self.is_simulation_running:
             self.simulation_view.draw(
-                intersection_pojo.traffic_lights_list(),
-                intersection_pojo.vehicles_list(),
+                self.intersection.traffic_lights_list(),
+                self.intersection.vehicles_list(),
             )
+            self.counter_panel.update(self.intersection.passing_vehicles_dict())
         time_delta = self.clock.tick(60) / 1000.0
-        self.form.update()
         self.manager.update(time_delta)
         self.manager.draw_ui(self.screen)
 
@@ -108,6 +114,8 @@ class MainView:
                     self.__change_lights_time()
                     self.form.disable_start_button()
                     self.form.disable_lights_time_panel_inputs()
+                    self.counter_panel.lights = self.intersection.traffic_lights
+                    self.counter_panel.init_elements()
                     self.is_simulation_running = True
                 if event.ui_element == self.form.buttons_panel.btn_stop:
                     self.form.active_start_button()
@@ -124,13 +132,3 @@ class MainView:
                 i,
                 float(self.form.lights_time_panel.elements[i]["entries"][0].get_text()),
             )
-
-    def adjust_vehicle_asset(self, vehicle):
-        vehicle_turn_angle_limits = vehicle.turn_angle_limits()
-        angle = (
-            math.degrees(
-                abs(vehicle_turn_angle_limits[1] - vehicle_turn_angle_limits[0])
-            )
-            * vehicle_turn_angle_limits[2]
-        )
-        vehicle.asset = pygame.transform.rotate(vehicle.asset, angle)

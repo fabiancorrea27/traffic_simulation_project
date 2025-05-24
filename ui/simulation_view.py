@@ -14,7 +14,7 @@ class SimulationView:
     ):
         self.screen.fill(WHITE)
 
-        center = (config["SIMULATION_WIDTH"] // 2, config["WINDOW_HEIGHT"] // 2)
+        center = config["SIMULATION_CENTER"]
         pygame.draw.rect(
             self.screen,
             GRAY,
@@ -35,7 +35,7 @@ class SimulationView:
                 config["ROAD_WIDTH"],
             ),
         )
-
+        
         for traffic_light in traffic_lights_list:
             pygame.draw.circle(
                 self.screen,

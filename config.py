@@ -2,6 +2,7 @@ config = {
     "WINDOW_WIDTH": 1000,
     "WINDOW_HEIGHT": 600,
     "SIMULATION_WIDTH": 800,
+    "SIMULATION_CENTER": (0, 0),
     "FORM_WIDTH": 200,
     "ROAD_WIDTH": 200,
     "UI_ELEMENTS_SPACING": 5,
