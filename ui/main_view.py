@@ -22,6 +22,7 @@ class MainView:
         self.form = Form(self.screen, self.manager)
         self.counter_panel = CounterPanel(self.screen, self.manager)
         self.is_simulation_running = False
+        self.optimize_requested = False  # <- NUEVO: bandera para optimización
         self.toggle_time = 0
         self.vehicles_assets = {"N": [], "S": [], "E": [], "W": []}
         self.__charge_vehicles_assets()
@@ -101,7 +102,6 @@ class MainView:
         self.manager.draw_ui(self.screen)
 
         pygame.display.flip()
-
         return True
 
     def __check_events(self):
@@ -109,6 +109,7 @@ class MainView:
             self.manager.process_events(event)
             if event.type == pygame.QUIT:
                 return False
+
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.form.buttons_panel.btn_start:
                     self.__change_lights_time()
@@ -117,13 +118,21 @@ class MainView:
                     self.counter_panel.lights = self.intersection.traffic_lights
                     self.counter_panel.init_elements()
                     self.is_simulation_running = True
+
                 if event.ui_element == self.form.buttons_panel.btn_stop:
                     self.form.active_start_button()
                     self.form.active_lights_time_panel_inputs()
                     self.is_simulation_running = False
                     self.intersection.restart_to_initial_state()
+
+                # NUEVO: manejar botón "Optimizar"
+                if event.ui_element == self.form.buttons_panel.btn_optimize:
+                    print("Botón de optimización presionado")
+                    self.optimize_requested = True
+
             if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
                 self.form.lights_time_panel.verify_text_entry_values()
+
         return True
 
     def __change_lights_time(self):

@@ -1,7 +1,9 @@
 import pygame
 from config import GREEN, RED, config
 from ui import MainView
-from simulation import Intersection, Vehicle
+from simulation.intersection import Intersection
+from simulation.TrafficFlowOptimizer import TrafficFlowOptimizer
+
    
 def main():
     main_view = MainView()
@@ -10,8 +12,10 @@ def main():
     intersection.simulation_view = main_view
     intersection.add_vehicles(2, "N")
     intersection.add_vehicles(2, "S")
-    intersection.add_vehicles(2, "E")
-    intersection.add_vehicles(2, "W")
+    intersection.add_vehicles(4, "E")
+    intersection.add_vehicles(4, "W")
+
+    optimizer = TrafficFlowOptimizer(intersection) 
 
     running = True
     is_vehicles_collided = False
@@ -22,6 +26,11 @@ def main():
                 toggle_timer += 1
                 intersection.check_lights_state(toggle_timer / 60)
                 intersection.update()
+
+        if main_view.optimize_requested:
+            main_view.optimize_requested = False
+            optimal_times = optimizer.start_optimization_cycle(time_limit_seconds=60)
+            print("Tiempos óptimos:", optimal_times)
 
         if not main_view.update():
             running = False
