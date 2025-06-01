@@ -20,7 +20,7 @@ class ButtonsPanel(UIPanel):
         self.width = self.get_relative_rect().width
         self.height = self.get_relative_rect().height
         self.final_height = self.get_relative_rect().height
-        self.btn_start = self.btn_stop = None
+        self.btn_start = self.btn_stop = self.btn_optimize = None
         self.__config_buttons()
 
     def __config_buttons(self):
@@ -34,7 +34,9 @@ class ButtonsPanel(UIPanel):
             ),
             (buttons_height * 3, buttons_height),
         )
+
         buttons_pos_spacing = btn_relative_rect.width + config["UI_ELEMENTS_SPACING"]
+
         self.btn_start = pygame_gui.elements.UIButton(
             relative_rect=btn_relative_rect,
             text="Iniciar",
@@ -50,6 +52,20 @@ class ButtonsPanel(UIPanel):
             manager=self.ui_manager,
             container=self,
         )
+
+
+        # Botón Optimizar (debajo de los otros dos botones)
+        btn_relative_rect.x = config["UI_ELEMENTS_SPACING"]  # Reiniciar posición X
+        btn_relative_rect.y = btn_relative_rect.y + btn_relative_rect.height + config["UI_ELEMENTS_SPACING"]  # Nueva fila
+
+        self.btn_optimize = pygame_gui.elements.UIButton(
+            relative_rect=btn_relative_rect,
+            text="Optimizar",
+            manager=self.ui_manager,
+            container=self,
+        )
+
+        # Calcular la altura final del panel
         self.final_height = btn_relative_rect.y + btn_relative_rect.height + config["UI_ELEMENTS_SPACING"]
     
     
