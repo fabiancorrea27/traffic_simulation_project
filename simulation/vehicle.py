@@ -257,7 +257,9 @@ class Vehicle:
             )
             self.asset = pygame.transform.rotate(self.asset, angle)
             self.calculate_size()
-        self.change_random_final_direction if change_direction else None
+        if change_direction:
+            self.change_random_final_direction 
+        self.calculate_turning_limit()
         self.has_moved = False
         self.has_turned = False
         self.has_counted = False
