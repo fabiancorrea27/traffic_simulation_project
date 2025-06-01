@@ -154,6 +154,20 @@ class LightTimePanel(UIPanel):
             + txt_relative_rect.height
             + config["UI_ELEMENTS_SPACING"]
         )
+        lbl_E_light = pygame_gui.elements.UILabel(
+            relative_rect=lbl_relative_rect,
+            text=f"{EAST_TITLE}",
+            manager=self.ui_manager,
+            container=self,
+        )
+
+        self.elements["E"]["labels"].append(lbl_E_light)
+
+        lbl_relative_rect.x = (
+            lbl_relative_rect.x
+            + lbl_relative_rect.width
+            + config["UI_ELEMENTS_SPACING"]
+        )
 
         lbl_W_light = pygame_gui.elements.UILabel(
             relative_rect=lbl_relative_rect,
@@ -162,22 +176,7 @@ class LightTimePanel(UIPanel):
             container=self,
         )
 
-        self.elements["E"]["labels"].append(lbl_W_light)
-
-        lbl_relative_rect.x = (
-            lbl_relative_rect.x
-            + lbl_relative_rect.width
-            + config["UI_ELEMENTS_SPACING"]
-        )
-
-        lbl_E_light = pygame_gui.elements.UILabel(
-            relative_rect=lbl_relative_rect,
-            text=f"{EAST_TITLE}",
-            manager=self.ui_manager,
-            container=self,
-        )
-
-        self.elements["W"]["labels"].append(lbl_E_light)
+        self.elements["W"]["labels"].append(lbl_W_light)
 
         txt_relative_rect.x = (
             config["UI_ELEMENTS_SPACING"] + lbl_size // 2 - txt_relative_rect.width // 2
@@ -208,18 +207,10 @@ class LightTimePanel(UIPanel):
         self.elements["W"]["entries"].append(txt_W_green_light)
 
     def __config_txt(self):
-        self.elements["N"]["entries"][0].set_text(
-            str(DEFAULT_GREEN_NORTH_LIGHT_TIME)
-        )
-        self.elements["S"]["entries"][0].set_text(
-            str(DEFAULT_GREEN_SOUTH_LIGHT_TIME)
-        )
-        self.elements["E"]["entries"][0].set_text(
-            str(DEFAULT_GREEN_EAST_LIGHT_TIME)
-        )
-        self.elements["W"]["entries"][0].set_text(
-            str(DEFAULT_GREEN_WEST_LIGHT_TIME)
-        )
+        self.elements["N"]["entries"][0].set_text(str(DEFAULT_GREEN_NORTH_LIGHT_TIME))
+        self.elements["S"]["entries"][0].set_text(str(DEFAULT_GREEN_SOUTH_LIGHT_TIME))
+        self.elements["E"]["entries"][0].set_text(str(DEFAULT_GREEN_EAST_LIGHT_TIME))
+        self.elements["W"]["entries"][0].set_text(str(DEFAULT_GREEN_WEST_LIGHT_TIME))
 
     def verify_text_entry_values(self):
         for key in self.elements.keys():
