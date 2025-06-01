@@ -7,11 +7,7 @@ class SimulationView:
     def __init__(self, screen):
         self.screen = screen
 
-    def draw(
-        self,
-        traffic_lights_list,
-        vehicles_list,
-    ):
+    def draw(self, traffic_lights_list, vehicles_list, pedestrians_list):
         self.screen.fill(WHITE)
 
         center = config["SIMULATION_CENTER"]
@@ -35,7 +31,7 @@ class SimulationView:
                 config["ROAD_WIDTH"],
             ),
         )
-        
+
         for traffic_light in traffic_lights_list:
             pygame.draw.circle(
                 self.screen,
@@ -73,3 +69,13 @@ class SimulationView:
                 vehicle.changed_asset = True
             self.screen.blit(rotated_asset, rectangle.topleft)
 
+        for pedestrian in pedestrians_list:
+            pygame.draw.circle(
+                self.screen,
+                BLUE,
+                (
+                    pedestrian.x + pedestrian.width // 2,
+                    pedestrian.y + pedestrian.height // 2,
+                ),
+                pedestrian.width // 2,
+            )

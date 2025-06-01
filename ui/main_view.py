@@ -94,6 +94,7 @@ class MainView:
             self.simulation_view.draw(
                 self.intersection.traffic_lights_list(),
                 self.intersection.vehicles_list(),
+                self.intersection.pedestrians,
             )
             self.counter_panel.update(self.intersection.passing_vehicles_dict())
         time_delta = self.clock.tick(60) / 1000.0

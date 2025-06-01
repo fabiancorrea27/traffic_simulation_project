@@ -1,7 +1,7 @@
 import math
 import random
 import pygame
-
+from util import TrafficUtils
 from config import GREEN, YELLOW, config
 
 
@@ -27,43 +27,49 @@ class Vehicle:
 
     def calculate_initial_position(self):
         center = config["SIMULATION_CENTER"]
+        road_quarter = config["ROAD_WIDTH"] // 4
         if self.initial_direction == "E":
             self.x = -self.width - self.initial_offset
-            self.y = center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2
+            self.y = center[1] + road_quarter - self.height // 2
         elif self.initial_direction == "W":
             self.x = config["SIMULATION_WIDTH"] + self.initial_offset
-            self.y = center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2
+            self.y = center[1] - road_quarter - self.height // 2
         elif self.initial_direction == "N":
-            self.x = center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2
+            self.x = center[0] + road_quarter - self.width // 2
             self.y = config["WINDOW_HEIGHT"] + self.initial_offset
         elif self.initial_direction == "S":
-            self.x = center[0] - config["ROAD_WIDTH"] // 4 - self.width // 2
+            self.x = center[0] - road_quarter - self.width // 2
             self.y = -self.height - self.initial_offset
 
     def calculate_turning_limit(self):
-        top, bottom, left, right = self.__calculate_center_limits()
+        center_limits = TrafficUtils.calculate_center_limits()
+        top = center_limits["top"]
+        bottom = center_limits["bottom"]
+        left = center_limits["left"]
+        right = center_limits["right"]
         center = config["SIMULATION_CENTER"]
+        road_quarter = config["ROAD_WIDTH"] // 4
 
         limit_map = {
-            ("N", "E"): (center[0] + config["ROAD_WIDTH"] // 4, bottom),
-            ("N", "W"): (center[0] + config["ROAD_WIDTH"] // 4, center[1]),
-            ("S", "E"): (center[0] - config["ROAD_WIDTH"] // 4, center[1]),
-            ("S", "W"): (center[0] - config["ROAD_WIDTH"] // 4, top),
+            ("N", "E"): (center[0] + road_quarter, bottom),
+            ("N", "W"): (center[0] + road_quarter, center[1]),
+            ("S", "E"): (center[0] - road_quarter, center[1]),
+            ("S", "W"): (center[0] - road_quarter, top),
             ("E", "N"): (
                 center[0],
-                center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2,
+                center[1] + road_quarter - self.height // 2,
             ),
             ("E", "S"): (
                 left,
-                center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2,
+                center[1] + road_quarter - self.height // 2,
             ),
             ("W", "N"): (
                 right,
-                center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2,
+                center[1] - road_quarter - self.height // 2,
             ),
             ("W", "S"): (
                 center[0],
-                center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2,
+                center[1] - road_quarter - self.height // 2,
             ),
         }
 
@@ -101,13 +107,6 @@ class Vehicle:
         )
 
         return x_coor, y_coor
-
-    def __calculate_center_limits(self):
-        top_limit = config["WINDOW_HEIGHT"] // 2 - config["ROAD_WIDTH"] // 2
-        bottom_limit = config["WINDOW_HEIGHT"] // 2 + config["ROAD_WIDTH"] // 2
-        left_limit = config["SIMULATION_WIDTH"] // 2 - config["ROAD_WIDTH"] // 2
-        right_limit = config["SIMULATION_WIDTH"] // 2 + config["ROAD_WIDTH"] // 2
-        return top_limit, bottom_limit, left_limit, right_limit
 
     def calculate_size(self):
         self.width = self.asset.get_width()
@@ -169,36 +168,38 @@ class Vehicle:
         self.x = round(self.x)
         self.y = round(self.y)
         center = config["SIMULATION_CENTER"]
+        road_quarter = config["ROAD_WIDTH"] // 4
         if self.final_direction == "N":
-            self.x = center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2
+            self.x = center[0] + road_quarter - self.width // 2
         elif self.final_direction == "S":
-            self.x = center[0] - config["ROAD_WIDTH"] // 4 - self.width // 2
+            self.x = center[0] - road_quarter - self.width // 2
         elif self.final_direction == "E":
-            self.y = center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2
+            self.y = center[1] + road_quarter - self.height // 2
         elif self.final_direction == "W":
-            self.y = center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2
+            self.y = center[1] - road_quarter - self.height // 2
 
     def calculte_position_after_turn(self):
         center = config["SIMULATION_CENTER"]
+        road_quarter = config["ROAD_WIDTH"] // 4
         if self.final_direction == "N":
             return (
-                center[0] + config["ROAD_WIDTH"] // 4 - self.width // 2,
+                center[0] + road_quarter - self.width // 2,
                 round(self.y),
             )
         elif self.final_direction == "S":
             return (
-                center[0] - config["ROAD_WIDTH"] // 4 - self.width // 2,
+                center[0] - road_quarter - self.width // 2,
                 round(self.y),
             )
         elif self.final_direction == "E":
             return (
                 round(self.x),
-                center[1] + config["ROAD_WIDTH"] // 4 - self.height // 2,
+                center[1] + road_quarter - self.height // 2,
             )
         elif self.final_direction == "W":
             return (
                 round(self.x),
-                center[1] - config["ROAD_WIDTH"] // 4 - self.height // 2,
+                center[1] - road_quarter - self.height // 2,
             )
 
     def __move_straight(self):
@@ -247,7 +248,7 @@ class Vehicle:
         elif self.initial_direction == "W":
             self.final_direction = random.choice(["W", "N", "S"])
 
-    def reset(self, change_direction=False):
+    def reset_to_initial_state(self, change_direction=False):
         turn_angle_limits = self.turn_angle_limits()
         if self.changed_asset:
             angle = (

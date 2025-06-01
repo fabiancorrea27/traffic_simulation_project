@@ -3,6 +3,10 @@ import math
 import random
 from config import *
 
+import networkx as nx
+
+from simulation.pedestrian import Pedestrian
+from util.traffic_utils import TrafficUtils
 from .vehicle import Vehicle
 from .traffic_light import TrafficLight
 from .exceptions import CollisionErrorException
@@ -24,6 +28,7 @@ class Intersection:
             "E": [],
             "W": [],
         }
+        self.pedestrians = []
         self.simulation_view = None
 
     def __configure_lights_time(self):
@@ -95,21 +100,45 @@ class Intersection:
                 vehicle.initial_offset = offset
                 offset += total_spacing
 
+    def add_pedestrians(self, amount):
+        for _ in range(amount):
+            pedestrian = Pedestrian()
+            pedestrian.graph = TrafficUtils.pedestrian_graph()
+            pedestrian.change_random_initial_direction()
+            pedestrian.change_random_final_direction()
+            pedestrian.calculate_initial_position()
+            self.pedestrians.append(pedestrian)
+
+    def add_pedestrian(self, initial_direction, final_direction):
+        pedestrian = Pedestrian()
+        pedestrian.graph = TrafficUtils.pedestrian_graph()
+        pedestrian.initial_direction = initial_direction
+        pedestrian.final_direction = final_direction
+        pedestrian.calculate_change_points()
+        pedestrian.calculate_initial_position()
+        self.pedestrians.append(pedestrian)
+
     def update(self):
         vehicle_list = [v for sublist in self.vehicles.values() for v in sublist]
-
-        for v in vehicle_list:
-            self.__control_light_car_stop_action(v)
 
         for v1, v2 in itertools.combinations(vehicle_list, 2):
             self.__control_vehicles_crash(v1, v2)
 
         for v in vehicle_list:
+            self.__control_light_car_stop_action(v)
             v.speed = 0 if v.is_stopped else config["VEHICLE_SPEED"]
             self.__count_lights_passing_vehicles(v)
             self.__control_vehicle_out_of_bounds(v)
             v.update()
             v.is_stopped = False
+
+        for p in self.pedestrians:
+            self.__control_light_pedestrian_stop_action(p)
+            self.__control_pedestrian_out_limit(p)
+            p.speed = 0 if p.is_stopped else config["PEDESTRIAN_SPEED"]
+            p.update()
+            p.is_stopped = False
+            
 
     def __control_light_car_stop_action(self, vehicle):
         light = self.traffic_lights[vehicle.initial_direction]
@@ -145,7 +174,7 @@ class Intersection:
             vehicle1.initial_direction != vehicle2.initial_direction
         ):
             if self.__vehicle_will_collide_while_turning(vehicle1, vehicle2):
-                pass
+                return
         else:
             if self.__vehicle_will_collide_same_direction(vehicle1, vehicle2):
                 if self.__is_behind(vehicle1, vehicle2):
@@ -222,7 +251,7 @@ class Intersection:
             )
             or (vehicle.final_direction == "W" and vehicle.x < -vehicle.width)
         ):
-            vehicle.reset(True)
+            vehicle.reset_to_initial_state(True)
 
     def __count_lights_passing_vehicles(self, vehicle):
         for light in self.traffic_lights.values():
@@ -246,6 +275,52 @@ class Intersection:
                     light.passing_vehicles += 1
                     vehicle.has_counted = True
 
+    def __control_pedestrian_out_limit(self, pedestrian):
+        center_limits = TrafficUtils.calculate_center_limits()
+        road_half = config["ROAD_WIDTH"] // 2
+        if pedestrian.has_moved and (
+            (
+                pedestrian.final_direction in ("NE", "NW")
+                and pedestrian.y >= center_limits["bottom"] + road_half
+            )
+            or (
+                pedestrian.final_direction in ("SE", "SW")
+                and pedestrian.y <= center_limits["top"] - road_half
+            )
+            or (
+                pedestrian.final_direction in ("EN", "ES")
+                and pedestrian.x <= center_limits["left"] - road_half
+            )
+            or (
+                pedestrian.final_direction in ("WN", "WS")
+                and pedestrian.x >= center_limits["right"] + road_half
+            )
+        ):
+            pedestrian.reset_to_initial_state(True)
+
+    def __control_light_pedestrian_stop_action(self, pedestrian):
+        central_limits = TrafficUtils.calculate_center_limits()
+        if pedestrian.direction_movement == "N" and pedestrian.y >= central_limits["bottom"]:
+            if pedestrian.actual_direction == "BL" and self.traffic_lights["E"].state == GREEN:
+                pedestrian.is_stopped = True
+            elif pedestrian.actual_direction == "BR" and self.traffic_lights["W"].state == GREEN:
+                pedestrian.is_stopped = True
+        elif pedestrian.direction_movement == "S" and pedestrian.y <= central_limits["top"]:
+            if pedestrian.actual_direction == "TL" and self.traffic_lights["E"].state == GREEN:
+                pedestrian.is_stopped = True
+            elif pedestrian.actual_direction == "TR" and self.traffic_lights["W"].state == GREEN:
+                pedestrian.is_stopped = True
+        elif pedestrian.direction_movement == "E" and pedestrian.x <= central_limits["left"]:
+            if pedestrian.actual_direction == "TL" and self.traffic_lights["S"].state == GREEN:
+                pedestrian.is_stopped = True
+            elif pedestrian.actual_direction == "BL" and self.traffic_lights["N"].state == GREEN:
+                pedestrian.is_stopped = True
+        elif pedestrian.direction_movement == "W" and pedestrian.x >= central_limits["right"]:
+            if pedestrian.actual_direction == "TR" and self.traffic_lights["S"].state == GREEN:
+                pedestrian.is_stopped = True
+            elif pedestrian.actual_direction == "BR" and self.traffic_lights["N"].state == GREEN:
+                pedestrian.is_stopped = True
+        
     def check_lights_state(self, toggle_timer):
         lights_order = config["TRAFFIC_LIGHTS_ORDER"]
         for i in lights_order.keys():
@@ -293,7 +368,6 @@ class Intersection:
         light.green_time = green_time
 
     def restart_to_initial_state(self):
-
         for key in self.vehicles.keys():
             for vehicle in self.vehicles[key]:
                 vehicle.restart_to_initial_state()
@@ -301,17 +375,21 @@ class Intersection:
         for key in self.traffic_lights.keys():
             self.traffic_lights[key].was_green = False
 
+        for pedestrian in self.pedestrians:
+            pedestrian.restart_to_initial_state()
+
         for light in self.traffic_lights.values():
             light.was_green = False
             light.state = RED
-
         self.__configure_first_light()
-        
+
     def traffic_lights_list(self):
-       return [t for t in self.traffic_lights.values()]
-   
+        return [t for t in self.traffic_lights.values()]
+
     def vehicles_list(self):
-       return [v for vehicle_list in self.vehicles.copy().values() for v in vehicle_list]    
+        return [
+            v for vehicle_list in self.vehicles.copy().values() for v in vehicle_list
+        ]
 
     def passing_vehicles_dict(self):
         passing_vehicles_dict = {"N": 0, "S": 0, "E": 0, "W": 0}

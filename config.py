@@ -9,6 +9,8 @@ config = {
     "VEHICLE_WIDTH": 20,
     "VEHICLE_SPACING": 20,
     "VEHICLE_SPEED": 2,
+    "PEDESTRIAN_SPEED": 1,
+    "PEDESTRIAN_SIZE": 20,
     "TURNING_SPEED": 0.05,
     "LIGHT_RADIUS": 10,
     "LIGHT_LIMIT": 50,

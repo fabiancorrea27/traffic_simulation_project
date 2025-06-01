@@ -12,6 +12,7 @@ def main():
     intersection.add_vehicles(2, "S")
     intersection.add_vehicles(2, "E")
     intersection.add_vehicles(2, "W")
+    intersection.add_pedestrians(5)
 
     running = True
     is_vehicles_collided = False
