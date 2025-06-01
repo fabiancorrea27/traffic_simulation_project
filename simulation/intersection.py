@@ -33,7 +33,7 @@ class Intersection:
         self.pedestrians_light = {
             "N": [PedestrianLight("ES"), PedestrianLight("WS")],
             "S": [PedestrianLight("EN"), PedestrianLight("WN")],
-            "E": [PedestrianLight("SW"), PedestrianLight("NW")],
+            "E": [PedestrianLight("SW", RED), PedestrianLight("NW", RED)],
             "W": [PedestrianLight("NE"), PedestrianLight("SE")],
         }
         self.simulation_view = None
@@ -414,17 +414,20 @@ class Intersection:
     def change_light_times(self, light_direction, green_time):
         light = self.traffic_lights[light_direction]
         light.green_time = green_time
+        self.simulation_view.form.lights_time_panel.elements[light_direction]["entries"][0].set_text(str(green_time))
 
     def restart_to_initial_state(self):
         for key in self.vehicles.keys():
             for vehicle in self.vehicles[key]:
-                vehicle.restart_to_initial_state()
+                vehicle.reset_to_initial_state()
 
         for key in self.traffic_lights.keys():
-            self.traffic_lights[key].was_green = False
+            traffic_light = self.traffic_lights[key]
+            traffic_light.was_green = False
+            traffic_light.passing_vehicles = 0
 
         for pedestrian in self.pedestrians:
-            pedestrian.restart_to_initial_state()
+            pedestrian.reset_to_initial_state()
 
         for light in self.traffic_lights.values():
             light.was_green = False

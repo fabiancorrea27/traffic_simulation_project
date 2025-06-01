@@ -4,10 +4,10 @@ from util.traffic_utils import TrafficUtils
 
 
 class PedestrianLight:
-    def __init__(self, direction):
+    def __init__(self, direction, initial_state = GREEN):
         self.direction = direction
         self.position = (0, 0)
-        self.state = GREEN
+        self.state = initial_state
         self.size = PEDESTRIAN_LIGHT_SIZE
         self.__calculate_position()
 
