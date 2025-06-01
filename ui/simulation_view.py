@@ -7,7 +7,13 @@ class SimulationView:
     def __init__(self, screen):
         self.screen = screen
 
-    def draw(self, traffic_lights_list, vehicles_list, pedestrians_list):
+    def draw(
+        self,
+        traffic_lights_list,
+        vehicles_list,
+        pedestrians_list,
+        pedestrian_lights_list,
+    ):
         self.screen.fill(WHITE)
 
         center = config["SIMULATION_CENTER"]
@@ -37,7 +43,22 @@ class SimulationView:
                 self.screen,
                 traffic_light.state,
                 traffic_light.position,
-                config["LIGHT_RADIUS"],
+                LIGHT_RADIUS,
+            )
+
+        for pedestrian_light in pedestrian_lights_list:
+            size_half = pedestrian_light.size // 2
+            pygame.draw.polygon(
+                self.screen,
+                pedestrian_light.state,
+                [
+                    (pedestrian_light.position[0] + size_half, pedestrian_light.position[1]),
+                    (
+                        pedestrian_light.position[0] + pedestrian_light.size,
+                        pedestrian_light.position[1] + pedestrian_light.size,
+                    ),
+                    (pedestrian_light.position[0], pedestrian_light.position[1] + pedestrian_light.size),
+                ],
             )
 
         for vehicle in vehicles_list:
@@ -70,12 +91,13 @@ class SimulationView:
             self.screen.blit(rotated_asset, rectangle.topleft)
 
         for pedestrian in pedestrians_list:
-            pygame.draw.circle(
+            pygame.draw.rect(
                 self.screen,
                 BLUE,
                 (
-                    pedestrian.x + pedestrian.width // 2,
-                    pedestrian.y + pedestrian.height // 2,
+                    pedestrian.x,
+                    pedestrian.y,
+                    pedestrian.width,
+                    pedestrian.height,
                 ),
-                pedestrian.width // 2,
             )

@@ -1,5 +1,5 @@
 import random
-from config import config
+from config import PEDESTRIAN_SPEED, config
 from util import TrafficUtils
 import networkx as nx
 
@@ -14,7 +14,7 @@ class Pedestrian:
         self.direction_movement = None
         self.change_points = []
         self.graph = None
-        self.speed = config["PEDESTRIAN_SPEED"]
+        self.speed = PEDESTRIAN_SPEED
         self.width = config["PEDESTRIAN_SIZE"]
         self.height = config["PEDESTRIAN_SIZE"]
         self.has_moved = False

@@ -2,7 +2,7 @@ import math
 import os
 import pygame
 import pygame_gui
-from config import config
+from config import VEHICLES_ASSETS_PATH, config
 from .counter_panel import CounterPanel
 from .form import Form
 from .simulation_view import SimulationView
@@ -47,7 +47,7 @@ class MainView:
         )
 
     def __charge_vehicles_assets(self):
-        file_folder = config["VEHICLES_ASSETS_PATH"]
+        file_folder = VEHICLES_ASSETS_PATH
         files = os.listdir(file_folder)
         files = [
             f
@@ -95,6 +95,7 @@ class MainView:
                 self.intersection.traffic_lights_list(),
                 self.intersection.vehicles_list(),
                 self.intersection.pedestrians,
+                self.intersection.pedestrian_lights_list(),
             )
             self.counter_panel.update(self.intersection.passing_vehicles_dict())
         time_delta = self.clock.tick(60) / 1000.0

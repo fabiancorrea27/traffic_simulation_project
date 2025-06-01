@@ -2,7 +2,7 @@ import math
 import random
 import pygame
 from util import TrafficUtils
-from config import GREEN, YELLOW, config
+from config import GREEN, VEHICLE_SPACING, VEHICLE_SPEED, YELLOW, config
 
 
 class Vehicle:
@@ -13,7 +13,7 @@ class Vehicle:
         self.y = 0
         self.initial_offset = 0
         self.turn_angle = 0
-        self.speed = config["VEHICLE_SPEED"]
+        self.speed = VEHICLE_SPEED
         self.width = config["VEHICLE_WIDTH"]
         self.height = config["VEHICLE_WIDTH"]
         self.is_stopped = False
@@ -116,8 +116,8 @@ class Vehicle:
         x_limit, y_limit = self.turning_limit
         if not self.turning_limit.__contains__(None):
             if (
-                abs(self.x - x_limit) < config["VEHICLE_SPACING"]
-                and abs(self.y - y_limit) < config["VEHICLE_SPACING"]
+                abs(self.x - x_limit) < VEHICLE_SPACING
+                and abs(self.y - y_limit) < VEHICLE_SPACING
                 and not self.is_turning
             ):
                 self.is_turning = True
@@ -152,7 +152,7 @@ class Vehicle:
         }
 
         start_angle, end_angle, angle_direction = turning_map.get(
-            (self.initial_direction, self.final_direction), (1, 1, 1)
+            (self.initial_direction, self.final_direction), (0, 0, 1)
         )
 
         return start_angle, end_angle, angle_direction
