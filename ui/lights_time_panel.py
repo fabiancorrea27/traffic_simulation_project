@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel
-from config import config
+from config import *
 
 
 class LightTimePanel(UIPanel):
@@ -95,7 +95,7 @@ class LightTimePanel(UIPanel):
 
         lbl_N_light = pygame_gui.elements.UILabel(
             relative_rect=lbl_relative_rect,
-            text=f"{config["NORTH_TITLE"]}",
+            text=f"{NORTH_TITLE}",
             manager=self.ui_manager,
             container=self,
         )
@@ -110,7 +110,7 @@ class LightTimePanel(UIPanel):
 
         lbl_S_light = pygame_gui.elements.UILabel(
             relative_rect=lbl_relative_rect,
-            text=f"{config["SOUTH_TITLE"]}",
+            text=f"{SOUTH_TITLE}",
             manager=self.ui_manager,
             container=self,
         )
@@ -157,7 +157,7 @@ class LightTimePanel(UIPanel):
 
         lbl_W_light = pygame_gui.elements.UILabel(
             relative_rect=lbl_relative_rect,
-            text=f"{config['WEST_TITLE']}",
+            text=f"{WEST_TITLE}",
             manager=self.ui_manager,
             container=self,
         )
@@ -172,7 +172,7 @@ class LightTimePanel(UIPanel):
 
         lbl_E_light = pygame_gui.elements.UILabel(
             relative_rect=lbl_relative_rect,
-            text=f"{config['EAST_TITLE']}",
+            text=f"{EAST_TITLE}",
             manager=self.ui_manager,
             container=self,
         )
@@ -209,16 +209,16 @@ class LightTimePanel(UIPanel):
 
     def __config_txt(self):
         self.elements["N"]["entries"][0].set_text(
-            str(config["DEFAULT_GREEN_NORTH_LIGHT_TIME"])
+            str(DEFAULT_GREEN_NORTH_LIGHT_TIME)
         )
         self.elements["S"]["entries"][0].set_text(
-            str(config["DEFAULT_GREEN_SOUTH_LIGHT_TIME"])
+            str(DEFAULT_GREEN_SOUTH_LIGHT_TIME)
         )
         self.elements["E"]["entries"][0].set_text(
-            str(config["DEFAULT_GREEN_EAST_LIGHT_TIME"])
+            str(DEFAULT_GREEN_EAST_LIGHT_TIME)
         )
         self.elements["W"]["entries"][0].set_text(
-            str(config["DEFAULT_GREEN_WEST_LIGHT_TIME"])
+            str(DEFAULT_GREEN_WEST_LIGHT_TIME)
         )
 
     def verify_text_entry_values(self):

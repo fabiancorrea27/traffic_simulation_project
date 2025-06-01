@@ -14,8 +14,9 @@ def main():
     intersection.add_vehicles(2, "S")
     intersection.add_vehicles(4, "E")
     intersection.add_vehicles(4, "W")
-
+    intersection.add_pedestrians(5)
     optimizer = TrafficFlowOptimizer(intersection) 
+
 
     running = True
     is_vehicles_collided = False
