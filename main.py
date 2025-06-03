@@ -10,10 +10,10 @@ def main():
     intersection = Intersection()
     main_view.intersection = intersection
     intersection.simulation_view = main_view
-    intersection.add_vehicles(10, "N")
-    intersection.add_vehicles(10, "S")
-    intersection.add_vehicles(10, "E")
-    intersection.add_vehicles(10, "W")
+    intersection.add_vehicles(4, "N")
+    intersection.add_vehicles(8, "S")
+    intersection.add_vehicles(20, "E")
+    intersection.add_vehicles(13, "W")
     # intersection.add_pedestrians(5)
     optimizer = TrafficFlowOptimizer(intersection) 
 
