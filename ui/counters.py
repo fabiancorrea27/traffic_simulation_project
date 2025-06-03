@@ -1,11 +1,10 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIPanel
 from pygame_gui.core import ObjectID
 from config import config
 
 
-class CounterPanel:
+class Counters:
     def __init__(
         self,
         screen,

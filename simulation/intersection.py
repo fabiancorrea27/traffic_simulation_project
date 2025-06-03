@@ -36,6 +36,7 @@ class Intersection:
             "E": [PedestrianLight("SW", RED), PedestrianLight("NW", RED)],
             "W": [PedestrianLight("NE"), PedestrianLight("SE")],
         }
+        self.total_passing_vehicles = 0
         self.simulation_view = None
 
     def __configure_lights_time(self):
@@ -133,7 +134,7 @@ class Intersection:
 
         for v in vehicle_list:
             self.__control_light_car_stop_action(v)
-            v.speed = 0 if v.is_stopped else VEHICLE_SPEED
+            v.speed = 0 if v.is_stopped else DEFAULT_VEHICLE_SPEED
             self.__count_lights_passing_vehicles(v)
             self.__control_vehicle_out_of_bounds(v)
             v.update()
@@ -259,21 +260,25 @@ class Intersection:
         for light in self.traffic_lights.values():
             if light.direction == vehicle.initial_direction and not vehicle.has_counted:
                 if light.direction == "N" and vehicle.y < light.position[1]:
+                    self.total_passing_vehicles += 1
                     light.passing_vehicles += 1
                     vehicle.has_counted = True
                 elif (
                     light.direction == "S"
                     and vehicle.y + vehicle.height > light.position[1]
                 ):
+                    self.total_passing_vehicles += 1
                     light.passing_vehicles += 1
                     vehicle.has_counted = True
                 elif (
                     light.direction == "E"
                     and vehicle.x + vehicle.width > light.position[0]
                 ):
+                    self.total_passing_vehicles += 1
                     light.passing_vehicles += 1
                     vehicle.has_counted = True
                 elif light.direction == "W" and vehicle.x < light.position[0]:
+                    self.total_passing_vehicles += 1
                     light.passing_vehicles += 1
                     vehicle.has_counted = True
 
@@ -369,10 +374,11 @@ class Intersection:
                     i == len(lights_order)
                     and self.traffic_lights[lights_order[i]].was_green
                 ):
+
                     self.__restart_lights_condition()
 
     def __change_light_state(self, direction, toggle_timer):
-        yellow_time = YELLOW_LIGHT_TIME
+        yellow_time = DEFAULT_YELLOW_TIME
         light = self.traffic_lights[direction]
 
         if toggle_timer <= 0:
@@ -381,12 +387,12 @@ class Intersection:
         if light.state == YELLOW:
             if toggle_timer % yellow_time == 0:
                 if light.last_state == RED:
-                    light.state = GREEN 
+                    light.state = GREEN
                     self.__change_pedestrian_light_state(light.direction, RED)
                 else:
                     light.state = RED
                     self.__change_pedestrian_light_state(light.direction, GREEN)
-                
+
             return True
 
         if light.state == RED and not light.was_green:
@@ -410,13 +416,16 @@ class Intersection:
     def __change_pedestrian_light_state(self, direction, state):
         for pedestrian_light in self.pedestrians_light[direction]:
             pedestrian_light.state = state
-        
+
     def change_light_times(self, light_direction, green_time):
         light = self.traffic_lights[light_direction]
         light.green_time = green_time
-        self.simulation_view.form.lights_time_panel.elements[light_direction]["entries"][0].set_text(str(green_time))
+        self.simulation_view.form.lights_time_panel.elements[light_direction][
+            "entries"
+        ][0].set_text(str(green_time))
 
     def restart_to_initial_state(self):
+        self.total_passing_vehicles = 0
         for key in self.vehicles.keys():
             for vehicle in self.vehicles[key]:
                 vehicle.reset_to_initial_state()
@@ -438,8 +447,12 @@ class Intersection:
         return [t for t in self.traffic_lights.values()]
 
     def pedestrian_lights_list(self):
-        return [t for light_list in self.pedestrians_light.copy().values() for t in light_list]
-    
+        return [
+            t
+            for light_list in self.pedestrians_light.copy().values()
+            for t in light_list
+        ]
+
     def vehicles_list(self):
         return [
             v for vehicle_list in self.vehicles.copy().values() for v in vehicle_list

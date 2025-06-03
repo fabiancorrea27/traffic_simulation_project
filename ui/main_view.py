@@ -3,7 +3,8 @@ import os
 import pygame
 import pygame_gui
 from config import VEHICLES_ASSETS_PATH, config
-from .counter_panel import CounterPanel
+from ui.final_title import FinalTitle
+from .counters import Counters
 from .form import Form
 from .simulation_view import SimulationView
 
@@ -20,11 +21,13 @@ class MainView:
         self.intersection = None
         self.simulation_view = SimulationView(self.screen)
         self.form = Form(self.screen, self.manager)
-        self.counter_panel = CounterPanel(self.screen, self.manager)
+        self.counters = Counters(self.screen, self.manager)
+        self.final_title = FinalTitle(self.screen, self.manager)
         self.is_simulation_running = False
         self.optimize_requested = False  # <- NUEVO: bandera para optimización
         self.toggle_time = 0
         self.vehicles_assets = {"N": [], "S": [], "E": [], "W": []}
+        self.framerate = 60
         self.__charge_vehicles_assets()
 
     def __config_screen(self):
@@ -98,8 +101,8 @@ class MainView:
                 self.intersection.pedestrians,
                 self.intersection.pedestrian_lights_list(),
             )
-            self.counter_panel.update(self.intersection.passing_vehicles_dict())
-        time_delta = self.clock.tick(60) / 1000.0
+            self.counters.update(self.intersection.passing_vehicles_dict())
+        time_delta = self.clock.tick(self.framerate) / 1000.0
         self.manager.update(time_delta)
         self.manager.draw_ui(self.screen)
 
@@ -114,28 +117,42 @@ class MainView:
 
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == self.form.buttons_panel.btn_start:
-                    self.__change_lights_time()
-                    self.form.disable_start_button()
-                    self.form.disable_lights_time_panel_inputs()
-                    self.counter_panel.lights = self.intersection.traffic_lights
-                    self.counter_panel.init_elements()
-                    self.is_simulation_running = True
-
+                    self.start_button_event()
                 if event.ui_element == self.form.buttons_panel.btn_stop:
-                    self.form.active_start_button()
-                    self.form.active_lights_time_panel_inputs()
-                    self.is_simulation_running = False
-                    self.intersection.restart_to_initial_state()
-
-                # NUEVO: manejar botón "Optimizar"
+                    self.stop_button_event()
+                if event.ui_element == self.form.buttons_panel.btn_increase_time:
+                    self.increase_time_button_event()
                 if event.ui_element == self.form.buttons_panel.btn_optimize:
-                    print("Botón de optimización presionado")
                     self.optimize_requested = True
-
             if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
                 self.form.lights_time_panel.verify_text_entry_values()
 
         return True
+
+    def start_button_event(self):
+
+        self.final_title.hide()
+        self.__change_lights_time()
+        self.form.disable_start_button()
+        self.form.disable_lights_time_panel_inputs()
+        self.counters.lights = self.intersection.traffic_lights
+        self.counters.init_elements()
+        self.is_simulation_running = True
+
+    def stop_button_event(self):
+        self.form.active_start_button()
+        self.form.active_lights_time_panel_inputs()
+        self.is_simulation_running = False
+        self.final_title.show(self.intersection.total_passing_vehicles)
+        self.intersection.restart_to_initial_state()
+
+    def increase_time_button_event(self):
+        if not self.form.buttons_panel.is_increased_time:
+            self.form.buttons_panel.is_increased_time = True
+            self.framerate *= 5
+        else:
+            self.form.buttons_panel.is_increased_time = False
+            self.framerate /= 5
 
     def __change_lights_time(self):
         for i in ("N", "S", "E", "W"):

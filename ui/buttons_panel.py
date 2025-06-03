@@ -20,7 +20,8 @@ class ButtonsPanel(UIPanel):
         self.width = self.get_relative_rect().width
         self.height = self.get_relative_rect().height
         self.final_height = self.get_relative_rect().height
-        self.btn_start = self.btn_stop = self.btn_optimize = None
+        self.btn_start = self.btn_stop = self.btn_optimize = self.btn_increase_time = None
+        self.is_increased_time = False
         self.__config_buttons()
 
     def __config_buttons(self):
@@ -61,6 +62,15 @@ class ButtonsPanel(UIPanel):
         self.btn_optimize = pygame_gui.elements.UIButton(
             relative_rect=btn_relative_rect,
             text="Optimizar",
+            manager=self.ui_manager,
+            container=self,
+        )
+        
+        btn_relative_rect.x = btn_relative_rect.x + buttons_pos_spacing
+        
+        self.btn_increase_time = pygame_gui.elements.UIButton(
+            relative_rect=btn_relative_rect,
+            text="x5 velocidad",
             manager=self.ui_manager,
             container=self,
         )

@@ -2,7 +2,7 @@ import math
 import random
 import pygame
 from util import TrafficUtils
-from config import GREEN, VEHICLE_SPACING, VEHICLE_SPEED, YELLOW, config
+from config import DEFAULT_VEHICLE_SPEED, GREEN, VEHICLE_SPACING, YELLOW, config
 
 
 class Vehicle:
@@ -13,7 +13,7 @@ class Vehicle:
         self.y = 0
         self.initial_offset = 0
         self.turn_angle = 0
-        self.speed = VEHICLE_SPEED
+        self.speed = DEFAULT_VEHICLE_SPEED
         self.width = config["VEHICLE_WIDTH"]
         self.height = config["VEHICLE_WIDTH"]
         self.is_stopped = False

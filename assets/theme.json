@@ -32,6 +32,15 @@
     }
   },
 
+  "@title_label": {
+    "colours": {
+      "dark_bg": "#f2f489",
+      "normal_text": "#000000"
+    },
+    "font": {
+      "size": 64
+    }
+  },
   "@counter_label": {
     "colours": {
       "dark_bg": "#cbcbcb",
