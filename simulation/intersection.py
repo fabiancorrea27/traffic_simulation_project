@@ -37,6 +37,7 @@ class Intersection:
             "W": [PedestrianLight("NE"), PedestrianLight("SE")],
         }
         self.total_passing_vehicles = 0
+        self.lights_toggle_timer = 0
         self.simulation_view = None
 
     def __configure_lights_time(self):
@@ -364,35 +365,34 @@ class Intersection:
             ):
                 pedestrian.is_stopped = True
 
-    def check_lights_state(self, toggle_timer):
+    def check_lights_state(self):
         lights_order = TRAFFIC_LIGHTS_ORDER
         for i in lights_order.keys():
-            if self.__change_light_state(lights_order[i], toggle_timer):
+            if self.__change_light_state(lights_order[i]):
                 return
             else:
                 if (
                     i == len(lights_order)
                     and self.traffic_lights[lights_order[i]].was_green
                 ):
-
                     self.__restart_lights_condition()
 
-    def __change_light_state(self, direction, toggle_timer):
+    def __change_light_state(self, direction):
         yellow_time = DEFAULT_YELLOW_TIME
         light = self.traffic_lights[direction]
 
-        if toggle_timer <= 0:
+        if self.lights_toggle_timer <= 0:
             return False
 
         if light.state == YELLOW:
-            if toggle_timer % yellow_time == 0:
+            if (self.lights_toggle_timer / 60) % yellow_time == 0:
                 if light.last_state == RED:
                     light.state = GREEN
                     self.__change_pedestrian_light_state(light.direction, RED)
                 else:
                     light.state = RED
                     self.__change_pedestrian_light_state(light.direction, GREEN)
-
+                self.lights_toggle_timer = 0
             return True
 
         if light.state == RED and not light.was_green:
@@ -400,10 +400,11 @@ class Intersection:
             light.state = YELLOW
             return True
 
-        if light.state == GREEN and toggle_timer % light.green_time == 0:
+        if light.state == GREEN and (self.lights_toggle_timer / 60) % light.green_time == 0:
             light.last_state = light.state
             light.state = YELLOW
             light.was_green = True
+            self.lights_toggle_timer = 0
             return True
 
         return False if light.state != GREEN else True
