@@ -7,8 +7,7 @@ class TrafficLight:
         self.state = initial_state
         self.was_green = False
         self.last_state = GREEN
-        self.red_time = 10
-        self.green_time = 10
+        self.green_time = 0
         self.passing_vehicles = 0
         
 

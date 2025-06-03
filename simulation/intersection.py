@@ -43,16 +43,12 @@ class Intersection:
     def __configure_lights_time(self):
         for l in self.traffic_lights.values():
             if l.direction == "N":
-                l.red_time = config["RED_LIGHT_TIME"]
                 l.green_time = DEFAULT_GREEN_NORTH_LIGHT_TIME
             elif l.direction == "S":
-                l.red_time = config["RED_LIGHT_TIME"]
                 l.green_time = DEFAULT_GREEN_SOUTH_LIGHT_TIME
             elif l.direction == "E":
-                l.red_time = config["RED_LIGHT_TIME"]
                 l.green_time = DEFAULT_GREEN_EAST_LIGHT_TIME
             elif l.direction == "W":
-                l.red_time = config["RED_LIGHT_TIME"]
                 l.green_time = DEFAULT_GREEN_WEST_LIGHT_TIME
 
     def __configure_first_light(self):

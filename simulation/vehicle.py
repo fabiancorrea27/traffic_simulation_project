@@ -2,7 +2,7 @@ import math
 import random
 import pygame
 from util import TrafficUtils
-from config import DEFAULT_VEHICLE_SPEED, GREEN, VEHICLE_SPACING, YELLOW, config
+from config import DEFAULT_TURNING_SPEED, DEFAULT_VEHICLE_SPEED, GREEN, VEHICLE_SPACING, YELLOW, config
 
 
 class Vehicle:
@@ -127,7 +127,7 @@ class Vehicle:
 
     def __move(self):
         if self.is_turning:
-            self.turn_angle += config["TURNING_SPEED"] if self.speed > 0 else 0
+            self.turn_angle += DEFAULT_TURNING_SPEED if self.speed > 0 else 0
             if self.turn_angle > self.turn_angle_limits()[1]:
                 self.turn_angle = self.turn_angle_limits()[1]
                 self.is_turning = False

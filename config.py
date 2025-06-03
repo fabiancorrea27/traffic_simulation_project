@@ -8,8 +8,6 @@ config = {
     "UI_ELEMENTS_SPACING": 5,
     "VEHICLE_WIDTH": 20,
     "PEDESTRIAN_SIZE": 20,
-    "TURNING_SPEED": 0.05,
-    "RED_LIGHT_TIME": 8.9,
 }
 
 NORTH_TITLE = "R"
